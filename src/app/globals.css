@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+/*
+ * Know Me Better design tokens: a school slam-book page.
+ * Ruled notebook paper, ballpoint-blue ink, a red margin line, yellow highlighter.
+ * Components use the Tailwind names below (bg-paper, text-ink, font-hand ...),
+ * never raw hex values, so light and dark stay in sync.
+ */
+:root {
+  --paper: #fbfaf6;
+  --sheet: #ffffff;
+  --rule: #d6e2f3;
+  --margin: #f2a7a7;
+  --ink: #1d3270;
+  --ink-soft: #56648f;
+  --line: #e3e7f0;
+  --hi: #ffe45c;
+  --on-hi: #1d3270;
+  --pink: #c8215e;
+  --pink-ink: #a3124a;
+  --good: #1a7f50;
+  --good-bg: #ddf5e8;
+  --bad: #c2362f;
+  --bad-bg: #fbe2df;
+  --shadow: 0 1px 0 rgb(29 50 112 / 0.06), 0 10px 30px -18px rgb(29 50 112 / 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #11131c;
+    --sheet: #181b27;
+    --rule: #252b3f;
+    --margin: #5c2b36;
+    --ink: #c9d6ff;
+    --ink-soft: #8c97bc;
+    --line: #2a3046;
+    --hi: #e8c93a;
+    --on-hi: #11131c;
+    --pink: #ff7aa7;
+    --pink-ink: #ff9cbe;
+    --good: #4fd192;
+    --good-bg: #173528;
+    --bad: #ff7c72;
+    --bad-bg: #3a1c1c;
+    --shadow: 0 10px 30px -18px rgb(0 0 0 / 0.8);
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-sheet: var(--sheet);
+  --color-rule: var(--rule);
+  --color-margin: var(--margin);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-hi: var(--hi);
+  --color-on-hi: var(--on-hi);
+  --color-pink: var(--pink);
+  --color-pink-ink: var(--pink-ink);
+  --color-good: var(--good);
+  --color-good-bg: var(--good-bg);
+  --color-bad: var(--bad);
+  --color-bad-bg: var(--bad-bg);
+
+  --font-sans: "Figtree Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-hand: "Kalam", "Comic Sans MS", cursive;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  --shadow-sheet: var(--shadow);
+}
+
+/* Notebook ruling: one blue line every 32px. */
+@utility ruled {
+  background-image: repeating-linear-gradient(to bottom, transparent 0 31px, var(--rule) 31px 32px);
+  background-position: 0 14px;
+}
+
+/* Yellow highlighter stroke behind inline text. */
+@utility highlight {
+  background: linear-gradient(transparent 52%, var(--hi) 52% 92%, transparent 92%);
+  color: var(--on-hi);
+  padding-inline: 3px;
+}
+
+@keyframes stamp {
+  from {
+    transform: scale(0.6) rotate(-12deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(-4deg);
+    opacity: 1;
+  }
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+:focus-visible {
+  outline: 3px solid var(--pink);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
