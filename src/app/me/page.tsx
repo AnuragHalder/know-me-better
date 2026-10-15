@@ -1,39 +1,107 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signOut } from "@/app/actions/auth";
 import { PageShell } from "@/components/PageShell";
-import { Button } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
-import { getCurrentUser } from "@/lib/supabase/server";
+import { getCurrentUser, getServerSupabase } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Your page · Know Me Better" };
+export const metadata: Metadata = { title: "Your quizzes · Know Me Better" };
 
-export default async function MePage() {
+interface QuizRow {
+  id: string;
+  code: string;
+  owner_name: string;
+  play_count: number;
+  created_at: string;
+}
+
+const dateFormat = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short" });
+
+export default async function MePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ deleted?: string }>;
+}) {
+  const { deleted } = await searchParams;
   const user = await getCurrentUser();
   if (!user || user.isGuest) redirect("/login?next=/me");
 
+  const supabase = await getServerSupabase();
+  const { data } = supabase
+    ? await supabase
+        .from("quizzes")
+        .select("id, code, owner_name, play_count, created_at")
+        .order("created_at", { ascending: false })
+    : { data: [] };
+  const quizzes = (data ?? []) as QuizRow[];
   const firstName = user.name?.split(" ")[0];
 
   return (
     <PageShell>
       <Sheet ruled>
-        <span className="text-xs font-bold tracking-widest text-ink-soft uppercase">Signed in</span>
+        <span className="text-xs font-bold tracking-widest text-ink-soft uppercase">
+          {deleted ? "Quiz deleted" : "Signed in"}
+        </span>
         <h1 className="font-hand text-4xl leading-tight font-bold">
           {firstName ? (
             <>
               Hi, <span className="highlight">{firstName}</span>
             </>
           ) : (
-            "You're in"
+            "Your quizzes"
           )}
         </h1>
-        <p className="text-ink-soft">
-          Signed in as <b className="break-all text-ink">{user.email ?? user.name}</b>.
-        </p>
-        <p className="rounded-lg bg-hi/40 px-3 py-2 text-ink">
-          Making your quiz opens in the next update. Your account is ready for it.
-        </p>
+        {quizzes.length === 0 ? (
+          <>
+            <p className="text-ink-soft">
+              Fill in your slam-book page: 10 questions about you. Then send the link and see which
+              friend knows you best.
+            </p>
+            <div>
+              <ButtonLink href="/create" variant="pink">
+                Make my quiz
+              </ButtonLink>
+            </div>
+          </>
+        ) : (
+          <p className="text-ink-soft">Tap a quiz to share it or check who has played.</p>
+        )}
       </Sheet>
+
+      {quizzes.length > 0 && (
+        <Sheet>
+          <ul className="flex flex-col">
+            {quizzes.map((q) => (
+              <li key={q.id} className="border-t border-line first:border-t-0">
+                <Link
+                  href={`/me/quiz/${q.id}`}
+                  className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 py-2.5 text-ink no-underline"
+                >
+                  <span className="truncate font-semibold">{q.owner_name}&apos;s page</span>
+                  <span className="font-mono text-sm font-bold tracking-widest">{q.code}</span>
+                  <span className="text-sm text-ink-soft">
+                    Made {dateFormat.format(new Date(q.created_at))}
+                  </span>
+                  <span className="text-right text-sm text-ink-soft tabular-nums">
+                    {q.play_count} played
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <div>
+            <ButtonLink href="/create" variant="ghost" size="sm">
+              Make another quiz
+            </ButtonLink>
+          </div>
+        </Sheet>
+      )}
+
+      <p className="text-sm text-ink-soft">
+        Signed in as <b className="break-all text-ink">{user.email ?? user.name}</b>.
+      </p>
       <form action={signOut}>
         <Button type="submit" variant="ghost" size="sm">
           Sign out

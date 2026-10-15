@@ -31,7 +31,7 @@ export default function Home() {
           Answer 10 questions about yourself, send the link, and watch the scores come in.
         </p>
         <div className="flex flex-wrap items-center gap-2.5">
-          <ButtonLink href="/me" variant="pink">
+          <ButtonLink href="/create" variant="pink">
             Make my quiz
           </ButtonLink>
         </div>

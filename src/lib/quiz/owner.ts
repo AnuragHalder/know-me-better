@@ -1,0 +1,40 @@
+import "server-only";
+
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+export interface OwnerQuiz {
+  id: string;
+  code: string;
+  owner_name: string;
+  play_count: number;
+  created_at: string;
+  questions: {
+    position: number;
+    question_id: string | null;
+    prompt: string;
+    options: string[];
+    correct_option: number;
+  }[];
+}
+
+/**
+ * One of the signed-in creator's quizzes with its answers. Row-level security means
+ * this returns null for anyone else's quiz, exactly as if it didn't exist.
+ */
+export async function loadOwnerQuiz(
+  supabase: SupabaseClient,
+  quizId: string,
+): Promise<OwnerQuiz | null> {
+  if (!/^[0-9a-f-]{36}$/i.test(quizId)) return null;
+  const { data, error } = await supabase
+    .from("quizzes")
+    .select(
+      "id, code, owner_name, play_count, created_at, questions:quiz_questions(position, question_id, prompt, options, correct_option)",
+    )
+    .eq("id", quizId)
+    .maybeSingle();
+  if (error || !data) return null;
+  const quiz = data as OwnerQuiz;
+  quiz.questions = [...quiz.questions].sort((a, b) => a.position - b.position);
+  return quiz;
+}
