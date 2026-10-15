@@ -19,9 +19,12 @@
     "@fontsource-variable/figtree": "^5.2.8",
     "@fontsource/jetbrains-mono": "^5.2.6",
     "@fontsource/kalam": "^5.2.6",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2",
     "next": "15.5.27",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.7",
