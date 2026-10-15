@@ -1,0 +1,2 @@
+# Supabase CLI project file. Only the migrations folder is used by our deploy workflow.
+project_id = "know-me-better"

@@ -14,7 +14,12 @@ Read `docs/ROADMAP.md` first. Work one phase at a time, on its own branch, and o
 - **Logic** that can be pure (scoring, codes, verdicts) goes in `src/lib/` with a `*.test.ts` beside it.
 - **Security:** correct answers are never sent to a player's browser before they answer; scoring and
   paid unlocks are decided on the server only. Secrets never use the `NEXT_PUBLIC_` prefix.
-- **Database:** every schema change is a new file in `supabase/migrations/`. Never edit an applied one.
+- **Database:** every schema change is a new file in `supabase/migrations/` named
+  `YYYYMMDDHHMMSS_what.sql`. Never edit a migration that is on `main`; it has already run in
+  production. Read `docs/DATABASE.md` before touching the schema.
+- **Database rules:** clients never write tables directly; add a `security definer` function with
+  `set search_path = ''`, revoke it from `public, anon, authenticated`, then grant only who needs it.
+  Every new rule gets a test in `supabase/tests/database.test.ts`.
 
 ## Before pushing
 

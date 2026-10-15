@@ -4,7 +4,8 @@ A slam-book friendship quiz. You answer 10 questions about yourself, share a lin
 compete on a live leaderboard to prove who knows you best.
 
 Stack: Next.js (App Router) · TypeScript · Tailwind CSS · Supabase · Razorpay · Vercel.
-The build plan is in [docs/ROADMAP.md](docs/ROADMAP.md).
+The build plan is in [docs/ROADMAP.md](docs/ROADMAP.md); the database is described in
+[docs/DATABASE.md](docs/DATABASE.md).
 
 ## Run it locally
 
