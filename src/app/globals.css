@@ -82,6 +82,14 @@
   background: linear-gradient(transparent 52%, var(--hi) 52% 92%, transparent 92%);
   color: var(--on-hi);
   padding-inline: 3px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+
+  /* On dark paper, dark text can't sit half outside the stroke: fill the whole word. */
+  @media (prefers-color-scheme: dark) {
+    background: var(--hi);
+    border-radius: 4px;
+  }
 }
 
 @keyframes stamp {
