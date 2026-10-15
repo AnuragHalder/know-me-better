@@ -7,11 +7,11 @@ test("signed-out visitors who tap Make my quiz are asked to sign in", async ({ p
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Sign in to make your quiz");
 });
 
-test("login page offers Google and an email code", async ({ page }) => {
+test("login page offers Google and email sign-in", async ({ page }) => {
   await page.goto("/login");
   await expect(page.getByRole("button", { name: "Continue with Google" })).toBeVisible();
   await expect(page.getByLabel("Email")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Email me a code" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Email me a sign-in link" })).toBeVisible();
 });
 
 test("login ignores redirects to other websites", async ({ page }) => {

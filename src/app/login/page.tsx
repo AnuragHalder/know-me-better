@@ -9,7 +9,8 @@ import { LoginForm } from "./LoginForm";
 export const metadata: Metadata = { title: "Sign in · Know Me Better" };
 
 const ERRORS: Record<string, string> = {
-  google: "Google sign-in didn't finish. Try again, or use your email.",
+  callback:
+    "That sign-in didn't finish. The link may have expired or been opened in a different browser. Try again from this page.",
 };
 
 export default async function LoginPage({

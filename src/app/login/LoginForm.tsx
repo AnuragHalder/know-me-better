@@ -51,7 +51,12 @@ export function LoginForm({ next, initialError }: { next: string; initialError?:
     setError("");
     const { error } = await supabase.auth.signInWithOtp({
       email: address,
-      options: { shouldCreateUser: true },
+      options: {
+        shouldCreateUser: true,
+        // The email's link comes back here. If the email template shows a code
+        // instead (custom SMTP), the code box below works too.
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      },
     });
     setBusy(false);
     if (error) {
@@ -68,7 +73,7 @@ export function LoginForm({ next, initialError }: { next: string; initialError?:
     if (!supabase || step.kind !== "code") return;
     const token = code.replace(/\D/g, "");
     if (token.length < 6) {
-      setError("Enter the 6-digit code from the email.");
+      setError("Enter the 6-digit code from the email, or tap the link in it.");
       return;
     }
     setBusy(true);
@@ -123,21 +128,21 @@ export function LoginForm({ next, initialError }: { next: string; initialError?:
               className="min-h-12 rounded-xl border-2 border-line bg-sheet px-3.5 text-base text-ink placeholder:text-ink-soft/70"
             />
             <Button type="submit" variant="ghost" disabled={!supabase || busy || !email.trim()}>
-              {busy ? "Sending…" : "Email me a code"}
+              {busy ? "Sending…" : "Email me a sign-in link"}
             </Button>
           </form>
         </>
       ) : (
         <form onSubmit={verifyCode} className="flex flex-col gap-2.5">
           <p className="text-ink-soft">
-            We sent a 6-digit code to <b className="text-ink">{step.email}</b>. It can take a minute
-            to arrive; check spam too.
+            Check <b className="text-ink">{step.email}</b> and tap the sign-in link. Open it on this
+            phone, in this browser. It can take a minute to arrive; check spam too.
           </p>
           <label
             htmlFor="code"
             className="text-xs font-bold tracking-widest text-ink-soft uppercase"
           >
-            Code
+            Got a 6-digit code instead? Type it here
           </label>
           <input
             id="code"
@@ -171,7 +176,7 @@ export function LoginForm({ next, initialError }: { next: string; initialError?:
               disabled={busy || cooldown > 0}
               onClick={() => sendCode()}
             >
-              {cooldown > 0 ? `Send a new code in ${cooldown}s` : "Send a new code"}
+              {cooldown > 0 ? `Send again in ${cooldown}s` : "Send again"}
             </button>
           </div>
         </form>

@@ -2,7 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { safeNextPath } from "@/lib/redirects";
 import { getServerSupabase } from "@/lib/supabase/server";
 
-/** Google sends people back here with a one-time code, which we swap for a session. */
+/**
+ * Google and email sign-in links send people back here with a one-time code,
+ * which we swap for a session.
+ */
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
@@ -17,7 +20,7 @@ export async function GET(request: NextRequest) {
   }
 
   const back = new URL("/login", url.origin);
-  back.searchParams.set("error", "google");
+  back.searchParams.set("error", "callback");
   back.searchParams.set("next", next);
   return NextResponse.redirect(back);
 }
