@@ -18,13 +18,14 @@ Clients cannot insert or update any table, except a user editing their own profi
 
 ## Functions the app calls
 
-| Function                              | Who                             | What it does                                                                                   |
-| ------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `create_quiz(owner_name, items)`      | Signed-in creator (not a guest) | Validates 10 distinct bank questions and answers, returns `{id, code}`                         |
-| `get_quiz_for_play(code)`             | Anyone                          | Questions and options for a code, never the answers. `null` if no such code                    |
-| `start_attempt(code, player_name)`    | Signed-in or guest              | Starts or resumes the caller's attempt. Errors: `already_played`, `own_quiz`, `quiz_not_found` |
-| `answer_question(attempt_id, choice)` | The player                      | Scores the next question and only then returns its correct answer                              |
-| `get_leaderboard(quiz_id)`            | Owner, or a friend who finished | Top 10 plus the caller's own row; owner sees everyone with a `full_board` unlock               |
+| Function                                  | Who                             | What it does                                                                                   |
+| ----------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `create_quiz(owner_name, items)`          | Signed-in creator (not a guest) | Validates 10 distinct bank questions and answers, returns `{id, code}`                         |
+| `update_quiz(quiz_id, owner_name, items)` | The quiz's owner                | Same checks as `create_quiz`; only before any friend has started (`quiz_has_plays`)            |
+| `get_quiz_for_play(code)`                 | Anyone                          | Questions and options for a code, never the answers. `null` if no such code                    |
+| `start_attempt(code, player_name)`        | Signed-in or guest              | Starts or resumes the caller's attempt. Errors: `already_played`, `own_quiz`, `quiz_not_found` |
+| `answer_question(attempt_id, choice)`     | The player                      | Scores the next question and only then returns its correct answer                              |
+| `get_leaderboard(quiz_id)`                | Owner, or a friend who finished | Top 10 plus the caller's own row; owner sees everyone with a `full_board` unlock               |
 
 Errors are raised with a short code as the message (`sign_in_required`, `invalid_questions`,
 `attempt_finished`, `not_allowed`, …) so the app can show a friendly sentence for each.

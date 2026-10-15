@@ -117,6 +117,69 @@ describe("creating a quiz", () => {
   });
 });
 
+describe("editing a quiz", () => {
+  it("lets the owner change name, questions and answers before anyone plays", async () => {
+    const owner = await createUser(db);
+    const quiz = await newQuiz(owner);
+    const newItems = bank.slice(10, 20).map((q) => ({ question_id: q.id, correct_option: 2 }));
+
+    const res = await rpc(db, owner, "update_quiz", [quiz.id, "Riya S", JSON.stringify(newItems)]);
+    expect(res).toEqual({ id: quiz.id, code: quiz.code });
+
+    const rows = await as<{ question_id: string; correct_option: number }>(
+      db,
+      owner,
+      "select question_id, correct_option from public.quiz_questions where quiz_id = $1 order by position",
+      [quiz.id],
+    );
+    expect(rows.map((r) => r.question_id)).toEqual(newItems.map((i) => i.question_id));
+    expect(new Set(rows.map((r) => r.correct_option))).toEqual(new Set([2]));
+    const [q] = await as<{ owner_name: string }>(
+      db,
+      owner,
+      "select owner_name from public.quizzes where id = $1",
+      [quiz.id],
+    );
+    expect(q.owner_name).toBe("Riya S");
+  });
+
+  it("is locked once a friend has started playing", async () => {
+    const owner = await createUser(db);
+    const quiz = await newQuiz(owner);
+    const friend = await createUser(db, { anonymous: true });
+    await rpc(db, friend, "start_attempt", [quiz.code, "Kabir"]);
+    await expect(
+      rpc(db, owner, "update_quiz", [quiz.id, "Riya", JSON.stringify(items(() => 1))]),
+    ).rejects.toThrow("quiz_has_plays");
+  });
+
+  it("cannot be done by someone else, and validates like creating", async () => {
+    const owner = await createUser(db);
+    const other = await createUser(db);
+    const quiz = await newQuiz(owner);
+    await expect(
+      rpc(db, other, "update_quiz", [quiz.id, "Hacker", JSON.stringify(items())]),
+    ).rejects.toThrow("quiz_not_found");
+    await expect(
+      rpc(db, owner, "update_quiz", [quiz.id, "Riya", JSON.stringify(items().slice(0, 9))]),
+    ).rejects.toThrow("need_10_questions");
+  });
+
+  it("lets the owner delete their quiz, and nobody else", async () => {
+    const owner = await createUser(db);
+    const other = await createUser(db);
+    const quiz = await newQuiz(owner);
+    await as(db, other, "delete from public.quizzes where id = $1", [quiz.id]);
+    expect(
+      await as(db, owner, "select id from public.quizzes where id = $1", [quiz.id]),
+    ).toHaveLength(1);
+    await as(db, owner, "delete from public.quizzes where id = $1", [quiz.id]);
+    expect(
+      await as(db, owner, "select id from public.quizzes where id = $1", [quiz.id]),
+    ).toHaveLength(0);
+  });
+});
+
 describe("keeping answers secret", () => {
   it("never shows a friend the correct answers before they answer", async () => {
     const owner = await createUser(db);
