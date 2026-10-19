@@ -23,16 +23,22 @@ GoDaddy account: customer number 726015466.
 
 Vercel → **Settings → Environment Variables**. "Prod" = Production, "Prev" = Preview.
 
-| Name                            | Where                      | Value / notes                                          |
-| ------------------------------- | -------------------------- | ------------------------------------------------------ |
-| `NEXT_PUBLIC_SUPABASE_URL`      | Prod + Prev                | already set                                            |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Prod + Prev                | already set                                            |
-| `NEXT_PUBLIC_SITE_URL`          | Prod                       | `https://whoknowsmebetter.in`                          |
-| `CANONICAL_HOST`                | Prod                       | `whoknowsmebetter.in`. Add **only after** step 1 works |
-| `OPENAI_API_KEY`                | Prod + Prev                | for AI questions (Phase 5b)                            |
+| Name                            | Where                      | Value / notes                                                  |
+| ------------------------------- | -------------------------- | -------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Prod + Prev                | already set                                                    |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Prod + Prev                | already set                                                    |
+| `NEXT_PUBLIC_SITE_URL`          | Prod                       | `https://whoknowsmebetter.in`                                  |
+| `CANONICAL_HOST`                | Prod                       | `whoknowsmebetter.in`. Add **only after** step 1 works         |
+| `OPENAI_API_KEY`                | Prod + Prev                | AI questions and moderation. Without it, the AI note is hidden |
+| `OPENAI_MODEL`                  | Prod + Prev (optional)     | defaults to `gpt-4.1-mini`                                     |
 | Razorpay values                 | see `docs/RAZORPAY.md` § 4 |
 
 After changing variables: **Deployments → latest production → Redeploy**.
+
+**OpenAI spend:** in the OpenAI dashboard set a monthly budget limit on the project that owns the
+key (Settings → Limits). One set of 10 questions costs well under ₹1 with `gpt-4.1-mini`; the
+app also caps usage (3 ad unlocks per person per day, 20 a day for Pro). Topics, AI output and
+creators' own wording are checked with OpenAI's free moderation endpoint.
 
 `CANONICAL_HOST` makes the old `know-me-better-sage.vercel.app` and `www.` addresses redirect
 to the main domain, keeping the path, so old shared quiz links keep working. Previews are never

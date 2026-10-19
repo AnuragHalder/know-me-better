@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { DeleteQuizButton } from "@/components/DeleteQuizButton";
+import { Leaderboard, type LeaderboardRow } from "@/components/Leaderboard";
 import { PageShell } from "@/components/PageShell";
 import { ShareBox } from "@/components/ShareBox";
 import { ButtonLink } from "@/components/ui/Button";
@@ -31,6 +32,23 @@ export default async function OwnerQuizPage({
   if (!quiz) notFound();
 
   const url = `${await siteOrigin()}${playPath(quiz.code)}`;
+
+  let rows: LeaderboardRow[] = [];
+  let hidden = 0;
+  if (quiz.play_count > 0) {
+    const { data } = await supabase.rpc("get_leaderboard", { p_quiz_id: quiz.id });
+    const board = data as {
+      total: number;
+      rows: { rank: number; player_name: string; results: boolean[] }[];
+    } | null;
+    rows = (board?.rows ?? []).map((r) => ({
+      id: `${r.rank}-${r.player_name}`,
+      name: r.player_name,
+      answers: r.results,
+      rank: r.rank,
+    }));
+    hidden = Math.max(0, (board?.total ?? 0) - rows.length);
+  }
   const locked = quiz.play_count > 0;
 
   return (
@@ -52,11 +70,16 @@ export default async function OwnerQuizPage({
             {quiz.play_count} played
           </span>
         </div>
-        <p className="text-ink-soft">
-          {quiz.play_count === 0
-            ? "No one has played yet. The leaderboard shows up here as friends finish."
-            : "The live leaderboard arrives in the next update."}
-        </p>
+        <Leaderboard
+          rows={rows}
+          emptyText="No one has played yet. The leaderboard shows up here as friends finish."
+        />
+        {hidden > 0 && (
+          <p className="text-sm text-ink-soft">
+            {hidden} more {hidden === 1 ? "friend" : "friends"} played. The full leaderboard is
+            coming soon.
+          </p>
+        )}
       </Sheet>
 
       <Sheet>

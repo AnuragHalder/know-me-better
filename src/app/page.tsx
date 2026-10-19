@@ -1,6 +1,6 @@
 import { Leaderboard, type LeaderboardRow } from "@/components/Leaderboard";
 import { PageShell } from "@/components/PageShell";
-import { ButtonLink } from "@/components/ui/Button";
+import { ButtonLink, buttonClasses } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 
 /** Sample scores on the home page. Clearly labelled as an example. */
@@ -35,6 +35,32 @@ export default function Home() {
             Make my quiz
           </ButtonLink>
         </div>
+        <form action="/play" className="flex flex-col gap-1.5">
+          <label
+            htmlFor="join-code"
+            className="text-xs font-bold tracking-widest text-ink-soft uppercase"
+          >
+            Got a friend&apos;s code?
+          </label>
+          <div className="flex gap-2">
+            <input
+              id="join-code"
+              name="code"
+              type="text"
+              inputMode="text"
+              autoCapitalize="characters"
+              autoComplete="off"
+              spellCheck={false}
+              maxLength={9}
+              placeholder="ABC123"
+              required
+              className="min-h-11 w-36 rounded-xl border-2 border-line bg-sheet px-3 font-mono text-base tracking-widest text-ink uppercase placeholder:text-ink-soft/60"
+            />
+            <button type="submit" className={buttonClasses({ variant: "ghost", size: "sm" })}>
+              Play
+            </button>
+          </div>
+        </form>
       </Sheet>
 
       <Sheet>

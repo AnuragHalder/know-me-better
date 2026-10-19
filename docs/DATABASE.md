@@ -5,27 +5,34 @@ Merging to `main` applies new migrations automatically (`.github/workflows/db-mi
 
 ## Tables
 
-| Table            | Holds                                                                     | Who can read directly |
-| ---------------- | ------------------------------------------------------------------------- | --------------------- |
-| `profiles`       | One row per account (creator or guest player)                             | The account itself    |
-| `questions`      | The shared question bank (Friends edition: 44 questions)                  | Everyone              |
-| `quizzes`        | A creator's quiz: code, display name, play count                          | Its owner             |
-| `quiz_questions` | The 10 questions of a quiz, copied from the bank, with the correct answer | Its owner only        |
-| `attempts`       | A friend's play: picks, right/wrong per question, score                   | The player themselves |
-| `purchases`      | Razorpay orders and their status                                          | The buyer             |
+| Table            | Holds                                                                                                                                                                                 | Who can read directly |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| `profiles`       | One row per account (creator or guest player)                                                                                                                                         | The account itself    |
+| `questions`      | The shared question bank (Friends edition: 44 questions)                                                                                                                              | Everyone              |
+| `quizzes`        | A creator's quiz: code, display name, play count                                                                                                                                      | Its owner             |
+| `quiz_questions` | The 10 questions of a quiz with the correct answer. Bank questions are copied; `source` is `bank`, `edited`, `custom` or `ai`; `prompt_self` keeps the creator's first-person wording | Its owner only        |
+| `attempts`       | A friend's play: picks, right/wrong per question, score                                                                                                                               | The player themselves |
+| `purchases`      | Razorpay orders and their status                                                                                                                                                      | The buyer             |
+| `ad_sessions`    | Rewarded-ad views: started, completed (≥ 14 s later), consumed by an AI generation                                                                                                    | The viewer            |
+| `ai_generations` | Each AI question request: topics, `pro` or `ad`, status `pending`/`ok`/`failed`                                                                                                       | The creator           |
 
 Clients cannot insert or update any table, except a user editing their own profile; owners may delete their own quizzes. Every other write goes through a function.
 
 ## Functions the app calls
 
-| Function                                  | Who                             | What it does                                                                                   |
-| ----------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `create_quiz(owner_name, items)`          | Signed-in creator (not a guest) | Validates 10 distinct bank questions and answers, returns `{id, code}`                         |
-| `update_quiz(quiz_id, owner_name, items)` | The quiz's owner                | Same checks as `create_quiz`; only before any friend has started (`quiz_has_plays`)            |
-| `get_quiz_for_play(code)`                 | Anyone                          | Questions and options for a code, never the answers. `null` if no such code                    |
-| `start_attempt(code, player_name)`        | Signed-in or guest              | Starts or resumes the caller's attempt. Errors: `already_played`, `own_quiz`, `quiz_not_found` |
-| `answer_question(attempt_id, choice)`     | The player                      | Scores the next question and only then returns its correct answer                              |
-| `get_leaderboard(quiz_id)`                | Owner, or a friend who finished | Top 10 plus the caller's own row; owner sees everyone with a `full_board` unlock               |
+| Function                                  | Who                             | What it does                                                                                                                                                                                           |
+| ----------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `create_quiz(owner_name, items)`          | Signed-in creator (not a guest) | Validates 10 items (bank, edited bank, or own/AI questions with 4 distinct options) through `quiz_items_checked`, returns `{id, code}`. Errors: `invalid_text`, `invalid_options`, `invalid_questions` |
+| `update_quiz(quiz_id, owner_name, items)` | The quiz's owner                | Same checks as `create_quiz`; only before any friend has started (`quiz_has_plays`)                                                                                                                    |
+| `get_quiz_for_play(code)`                 | Anyone                          | Questions and options for a code, never the answers. `null` if no such code                                                                                                                            |
+| `start_attempt(code, player_name)`        | Signed-in or guest              | Starts or resumes the caller's attempt. Errors: `already_played`, `own_quiz`, `quiz_not_found`                                                                                                         |
+| `answer_question(attempt_id, choice)`     | The player                      | Scores the next question and only then returns its correct answer                                                                                                                                      |
+| `get_leaderboard(quiz_id)`                | Owner, or a friend who finished | Top 10 plus the caller's own row; owner sees everyone with a `full_board` unlock                                                                                                                       |
+| `ai_status()`                             | Signed-in creator               | `{pro, credits, ads_left}`: unused ad unlocks, and ads left today (3 a day, India time)                                                                                                                |
+| `start_ad_session()`                      | Signed-in creator               | `{id, seconds: 15}`. Error `ad_limit` after 3 completed ads today                                                                                                                                      |
+| `complete_ad_session(id)`                 | The viewer                      | Marks the ad watched if ≥ 14 s passed (`ad_too_short` otherwise); returns `ai_status()`                                                                                                                |
+| `claim_ai_generation(topics)`             | Signed-in creator               | Pro: allowed (20 a day). Otherwise uses one ad unlock; `{allowed:false, reason:'needs_unlock'}` if none                                                                                                |
+| `finish_ai_generation(id, ok)`            | The creator                     | Records the outcome; a failed generation gives the ad unlock back                                                                                                                                      |
 
 Errors are raised with a short code as the message (`sign_in_required`, `invalid_questions`,
 `attempt_finished`, `not_allowed`, …) so the app can show a friendly sentence for each.

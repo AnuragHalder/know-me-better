@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { PageShell } from "@/components/PageShell";
 import { QuizBuilder } from "@/components/QuizBuilder";
+import { getAiStatus } from "@/app/create/ai-actions";
 import { loadBank } from "@/lib/quiz/bank";
+import { draftFromSaved } from "@/lib/quiz/build";
 import { loadOwnerQuiz } from "@/lib/quiz/owner";
 import { getCurrentUser, getServerSupabase } from "@/lib/supabase/server";
 
@@ -21,11 +23,8 @@ export default async function EditQuizPage({ params }: { params: Promise<{ id: s
   // Answers lock once friends have played; the quiz page explains why.
   if (quiz.play_count > 0) redirect(`/me/quiz/${id}`);
 
-  const bank = await loadBank(supabase);
-  const inBank = new Set(bank.map((q) => q.id));
-  const initialItems = quiz.questions
-    .filter((q) => q.question_id && inBank.has(q.question_id))
-    .map((q) => ({ questionId: q.question_id as string, answer: q.correct_option }));
+  const [bank, aiStatus] = await Promise.all([loadBank(supabase), getAiStatus()]);
+  const initialItems = draftFromSaved(quiz.questions, new Map(bank.map((q) => [q.id, q])));
 
   return (
     <PageShell>
@@ -34,6 +33,7 @@ export default async function EditQuizPage({ params }: { params: Promise<{ id: s
         initialItems={initialItems}
         initialName={quiz.owner_name}
         quizId={quiz.id}
+        aiStatus={aiStatus}
       />
     </PageShell>
   );

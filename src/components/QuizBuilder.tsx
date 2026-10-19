@@ -1,16 +1,24 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { AiStatus } from "@/app/create/ai-actions";
 import { saveQuiz } from "@/app/me/actions";
+import { AiWriter } from "@/components/AiWriter";
+import { QuestionEditor } from "@/components/QuestionEditor";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { cn } from "@/lib/cn";
 import { MAX_NAME_LENGTH, nameProblem } from "@/lib/names";
 import {
   answeredCount,
+  draftFromAi,
+  editItem,
+  fillName,
+  resetItem,
   setAnswer,
   swapQuestion,
   toRpcItems,
+  viewItem,
   type BankQuestion,
   type DraftItem,
 } from "@/lib/quiz/build";
@@ -21,13 +29,24 @@ interface QuizBuilderProps {
   initialName: string;
   /** Present when editing an existing quiz. */
   quizId?: string;
+  /** AI writing status; null hides the AI note (not signed in, or not set up). */
+  aiStatus?: AiStatus | null;
 }
 
-export function QuizBuilder({ bank, initialItems, initialName, quizId }: QuizBuilderProps) {
+export function QuizBuilder({
+  bank,
+  initialItems,
+  initialName,
+  quizId,
+  aiStatus = null,
+}: QuizBuilderProps) {
   const [name, setName] = useState(initialName);
   const [items, setItems] = useState(initialItems);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [beforeAi, setBeforeAi] = useState<DraftItem[] | null>(null);
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
+  const shownName = name.trim() || "you";
 
   const byId = new Map(bank.map((q) => [q.id, q]));
   const done = answeredCount(items);
@@ -39,6 +58,11 @@ export function QuizBuilder({ bank, initialItems, initialName, quizId }: QuizBui
     if (problem) {
       setError(problem);
       document.getElementById("owner-name")?.focus();
+      return;
+    }
+    if (editing) {
+      setError("Finish editing the open question first.");
+      document.getElementById(`edit-${items.findIndex((i) => i.key === editing)}-prompt`)?.focus();
       return;
     }
     if (firstUnanswered !== -1) {
@@ -83,59 +107,125 @@ export function QuizBuilder({ bank, initialItems, initialName, quizId }: QuizBui
         </div>
       </Sheet>
 
+      {aiStatus && (
+        <AiWriter
+          status={aiStatus}
+          onQuestions={(generated) => {
+            setBeforeAi(items);
+            setEditing(null);
+            setItems(draftFromAi(generated, bank));
+            document.getElementById("q-0")?.scrollIntoView({ block: "start", behavior: "smooth" });
+          }}
+        />
+      )}
+
       <Sheet>
+        {beforeAi && (
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-hi px-3 py-1 text-sm text-on-hi">
+            <span>AI questions are on your page.</span>
+            <button
+              type="button"
+              className="min-h-11 font-bold underline"
+              onClick={() => {
+                setItems(beforeAi);
+                setBeforeAi(null);
+                setEditing(null);
+              }}
+            >
+              Undo
+            </button>
+          </div>
+        )}
         <ol className="flex flex-col">
           {items.map((item, index) => {
-            const q = byId.get(item.questionId);
-            if (!q) return null;
+            const view = viewItem(item, byId);
+            if (!view) return null;
+            const heading = view.promptSelf ?? fillName(view.promptOther, shownName);
+            const isEditing = editing === item.key;
+            const tag = item.source === "ai" ? "AI" : view.edited ? "Edited" : null;
             return (
               <li
-                key={item.questionId}
+                key={item.key}
                 id={`q-${index}`}
                 className="flex scroll-mt-4 flex-col gap-2.5 border-t border-dashed border-line py-4 first:border-t-0 first:pt-0 last:pb-0"
               >
-                <div className="flex items-baseline justify-between gap-3">
+                <div className="flex items-start justify-between gap-2">
                   <h2 className="min-w-0 font-hand text-xl leading-snug">
                     <span className="mr-1.5 font-mono text-sm text-ink-soft">
                       {String(index + 1).padStart(2, "0")}
                     </span>
-                    {q.prompt_self}
+                    {heading}
+                    {tag && (
+                      <span className="ml-2 rounded-full border border-line px-1.5 align-middle font-sans text-[0.68rem] font-bold tracking-wider text-ink-soft uppercase">
+                        {tag}
+                      </span>
+                    )}
                   </h2>
-                  <button
-                    type="button"
-                    onClick={() => setItems((cur) => swapQuestion(cur, index, bank))}
-                    className="min-h-11 shrink-0 px-1 text-sm text-ink-soft underline"
-                    aria-label={`Swap question ${index + 1} for a different one`}
-                  >
-                    Swap
-                  </button>
-                </div>
-                <div
-                  role="radiogroup"
-                  aria-label={q.prompt_self}
-                  className="grid grid-cols-2 gap-2"
-                >
-                  {q.options.map((option, o) => {
-                    const picked = item.answer === o;
-                    return (
+                  {!isEditing && (
+                    <div className="flex shrink-0">
                       <button
-                        key={option}
                         type="button"
-                        role="radio"
-                        aria-checked={picked}
-                        onClick={() => setItems((cur) => setAnswer(cur, index, o))}
-                        className={cn(
-                          "min-h-12 rounded-xl border-2 px-3 py-2 text-left leading-snug transition-colors",
-                          picked
-                            ? "border-ink bg-hi font-bold text-on-hi"
-                            : "border-line bg-sheet font-medium text-ink hover:border-ink-soft",
-                        )}
+                        onClick={() => setEditing(item.key)}
+                        className="min-h-11 px-1.5 text-sm text-ink-soft underline"
+                        aria-label={`Edit question ${index + 1}`}
                       >
-                        {option}
+                        Edit
                       </button>
-                    );
-                  })}
+                      <button
+                        type="button"
+                        onClick={() => setItems((cur) => swapQuestion(cur, index, bank))}
+                        className="min-h-11 px-1.5 text-sm text-ink-soft underline"
+                        aria-label={`Swap question ${index + 1} for a different one`}
+                      >
+                        Swap
+                      </button>
+                    </div>
+                  )}
                 </div>
+                {isEditing ? (
+                  <QuestionEditor
+                    index={index}
+                    initial={{
+                      promptSelf: view.promptSelf,
+                      promptOther: view.promptOther,
+                      options: view.options,
+                    }}
+                    ownerName={name}
+                    canReset={Boolean(item.questionId && item.text)}
+                    onSave={(text) => {
+                      setItems((cur) => editItem(cur, index, text, byId));
+                      setEditing(null);
+                    }}
+                    onReset={() => {
+                      setItems((cur) => resetItem(cur, index));
+                      setEditing(null);
+                    }}
+                    onCancel={() => setEditing(null)}
+                  />
+                ) : (
+                  <div role="radiogroup" aria-label={heading} className="grid grid-cols-2 gap-2">
+                    {view.options.map((option, o) => {
+                      const picked = item.answer === o;
+                      return (
+                        <button
+                          key={`${o}-${option}`}
+                          type="button"
+                          role="radio"
+                          aria-checked={picked}
+                          onClick={() => setItems((cur) => setAnswer(cur, index, o))}
+                          className={cn(
+                            "min-h-12 rounded-xl border-2 px-3 py-2 text-left leading-snug break-words transition-colors",
+                            picked
+                              ? "border-ink bg-hi font-bold text-on-hi"
+                              : "border-line bg-sheet font-medium text-ink hover:border-ink-soft",
+                          )}
+                        >
+                          {option}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </li>
             );
           })}

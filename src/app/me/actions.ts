@@ -1,15 +1,12 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { aiConfigured, isFlagged } from "@/lib/ai/openai";
 import { cleanName, nameProblem } from "@/lib/names";
+import type { RpcItem } from "@/lib/quiz/build";
 import { quizErrorMessage } from "@/lib/quiz/errors";
 import { QUESTIONS_PER_QUIZ } from "@/lib/quiz/verdict";
 import { getServerSupabase } from "@/lib/supabase/server";
-
-interface RpcItem {
-  question_id: string;
-  correct_option: number;
-}
 
 export interface SaveQuizInput {
   /** Set when editing an existing quiz. */
@@ -31,6 +28,26 @@ export async function saveQuiz(input: SaveQuizInput): Promise<{ error: string }>
 
   const supabase = await getServerSupabase();
   if (!supabase) return { error: "Saving isn't set up on this copy of the app yet." };
+
+  // Words the creator typed themselves are checked like AI output, when AI is set up.
+  const ownWords = input.items.flatMap((i) =>
+    "prompt_other" in i && i.prompt_other
+      ? [
+          i.prompt_other,
+          ...(i.options ?? []),
+          ...("prompt_self" in i && i.prompt_self ? [i.prompt_self] : []),
+        ]
+      : [],
+  );
+  if (ownWords.length > 0 && aiConfigured()) {
+    try {
+      if (await isFlagged([input.ownerName, ...ownWords])) {
+        return { error: quizErrorMessage("text_not_allowed") };
+      }
+    } catch {
+      // If the check is down, the quiz still saves; the database limits still apply.
+    }
+  }
 
   const ownerName = cleanName(input.ownerName);
   const { data, error } = input.quizId
