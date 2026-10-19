@@ -32,8 +32,7 @@ export default async function LoginPage({
         </span>
         <h1 className="font-hand text-4xl leading-tight font-bold">Sign in to make your quiz</h1>
         <p className="text-ink-soft">
-          You need an account so your quiz and its leaderboard stay yours. Friends who play
-          don&apos;t need one.
+          Friends who play don&apos;t need an account. You do, so your quiz stays yours.
         </p>
         <LoginForm next={next} initialError={error ? ERRORS[error] : undefined} />
       </Sheet>
