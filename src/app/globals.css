@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * Know Me Better design tokens: a school slam-book page.
+ * Who Knows Me Better design tokens: a school slam-book page.
  * Ruled notebook paper, ballpoint-blue ink, a red margin line, yellow highlighter.
  * Components use the Tailwind names below (bg-paper, text-ink, font-hand ...),
  * never raw hex values, so light and dark stay in sync.

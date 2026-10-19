@@ -6,7 +6,7 @@ import { loadBank } from "@/lib/quiz/bank";
 import { loadOwnerQuiz } from "@/lib/quiz/owner";
 import { getCurrentUser, getServerSupabase } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Edit your quiz · Know Me Better" };
+export const metadata: Metadata = { title: "Edit your quiz" };
 
 export default async function EditQuizPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

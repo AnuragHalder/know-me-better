@@ -6,7 +6,7 @@ import { safeNextPath } from "@/lib/redirects";
 import { getCurrentUser } from "@/lib/supabase/server";
 import { LoginForm } from "./LoginForm";
 
-export const metadata: Metadata = { title: "Sign in · Know Me Better" };
+export const metadata: Metadata = { title: "Sign in" };
 
 const ERRORS: Record<string, string> = {
   callback:

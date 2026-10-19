@@ -12,7 +12,7 @@ import { loadOwnerQuiz } from "@/lib/quiz/owner";
 import { playPath } from "@/lib/quiz/share";
 import { getCurrentUser, getServerSupabase } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Your quiz · Know Me Better" };
+export const metadata: Metadata = { title: "Your quiz" };
 
 export default async function OwnerQuizPage({
   params,

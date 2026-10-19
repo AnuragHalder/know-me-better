@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { BRAND_NAME } from "@/lib/brand";
 import { inviteText, whatsappHref } from "@/lib/quiz/share";
 
 /** Code, link and the three ways to send them: phone share sheet, WhatsApp, copy. */
@@ -33,7 +34,7 @@ export function ShareBox({ url, code }: { url: string; code: string }) {
 
   async function share() {
     try {
-      await navigator.share({ title: "Know Me Better", text });
+      await navigator.share({ title: BRAND_NAME, text });
     } catch {
       // Closing the share sheet throws; nothing to do.
     }
