@@ -12,8 +12,10 @@ export interface OwnerQuiz {
     position: number;
     question_id: string | null;
     prompt: string;
+    prompt_self: string | null;
     options: string[];
     correct_option: number;
+    source: "bank" | "edited" | "custom" | "ai";
   }[];
 }
 
@@ -29,7 +31,7 @@ export async function loadOwnerQuiz(
   const { data, error } = await supabase
     .from("quizzes")
     .select(
-      "id, code, owner_name, play_count, created_at, questions:quiz_questions(position, question_id, prompt, options, correct_option)",
+      "id, code, owner_name, play_count, created_at, questions:quiz_questions(position, question_id, prompt, prompt_self, options, correct_option, source)",
     )
     .eq("id", quizId)
     .maybeSingle();

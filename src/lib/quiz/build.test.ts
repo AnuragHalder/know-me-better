@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   answeredCount,
+  draftFromAi,
+  draftFromSaved,
+  editItem,
   fillName,
+  resetItem,
+  toTemplate,
+  viewItem,
+  type BankQuestion,
   setAnswer,
   shuffle,
   startDraft,
@@ -74,5 +81,163 @@ describe("fillName", () => {
     expect(fillName("When {name} is angry, {name} …", "Kabir")).toBe(
       "When Kabir is angry, Kabir …",
     );
+  });
+});
+
+const fullBank: BankQuestion[] = Array.from({ length: 15 }, (_, i) => ({
+  id: `q${i}`,
+  prompt_self: `My thing ${i}?`,
+  prompt_other: `{name}'s thing ${i}?`,
+  options: ["A", "B", "C", "D"],
+}));
+const byId = new Map(fullBank.map((q) => [q.id, q]));
+
+describe("editing a question", () => {
+  it("sends edited wording and options for a bank question", () => {
+    let draft = setAnswer(startDraft(fullBank, 10, seeded()), 0, 1);
+    draft = editItem(
+      draft,
+      0,
+      { promptSelf: null, promptOther: " {name}'s new wording? ", options: ["W", "X", "Y", "Z "] },
+      byId,
+    );
+    expect(viewItem(draft[0], byId)).toMatchObject({
+      promptSelf: null,
+      promptOther: "{name}'s new wording?",
+      options: ["W", "X", "Y", "Z"],
+      edited: true,
+    });
+    draft.forEach((_, i) => (draft = setAnswer(draft, i, 1)));
+    expect(toRpcItems(draft)[0]).toEqual({
+      question_id: draft[0].questionId,
+      correct_option: 1,
+      prompt_other: "{name}'s new wording?",
+      options: ["W", "X", "Y", "Z"],
+    });
+  });
+
+  it("keeps the first-person wording when only the options change", () => {
+    const draft = startDraft(fullBank, 10, seeded());
+    const q = byId.get(draft[2].questionId!)!;
+    const edited = editItem(
+      draft,
+      2,
+      { promptSelf: null, promptOther: q.prompt_other, options: ["1", "2", "3", "4"] },
+      byId,
+    );
+    expect(viewItem(edited[2], byId)?.promptSelf).toBe(q.prompt_self);
+  });
+
+  it("turns back into a plain bank question when edited back, and on reset", () => {
+    const draft = startDraft(fullBank, 10, seeded());
+    const q = byId.get(draft[0].questionId!)!;
+    const changed = editItem(
+      draft,
+      0,
+      { promptSelf: null, promptOther: "Hi {name}?", options: q.options },
+      byId,
+    );
+    expect(changed[0].text).toBeDefined();
+    const back = editItem(
+      changed,
+      0,
+      { promptSelf: null, promptOther: q.prompt_other, options: q.options },
+      byId,
+    );
+    expect(back[0].text).toBeUndefined();
+    expect(resetItem(changed, 0)[0]).toEqual({ key: draft[0].key, questionId: q.id, answer: null });
+  });
+});
+
+describe("AI questions", () => {
+  const gen = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({
+      promptSelf: `My AI ${i}?`,
+      promptOther: `{name}'s AI ${i}?`,
+      options: ["A", "B", "C", "D"],
+    }));
+
+  it("fills the page and tops it up from the bank", () => {
+    const draft = draftFromAi(gen(7), fullBank, 10, seeded());
+    expect(draft).toHaveLength(10);
+    expect(draft.slice(0, 7).every((d) => d.source === "ai" && d.questionId === null)).toBe(true);
+    expect(new Set(draft.slice(7).map((d) => d.questionId)).size).toBe(3);
+    expect(new Set(draft.map((d) => d.key)).size).toBe(10);
+  });
+
+  it("sends own questions with their source", () => {
+    let draft = draftFromAi(gen(10), fullBank, 10, seeded());
+    draft.forEach((_, i) => (draft = setAnswer(draft, i, 3)));
+    expect(toRpcItems(draft)[0]).toEqual({
+      source: "ai",
+      correct_option: 3,
+      prompt_self: "My AI 0?",
+      prompt_other: "{name}'s AI 0?",
+      options: ["A", "B", "C", "D"],
+    });
+  });
+
+  it("swapping an AI question brings in an unused bank question", () => {
+    const draft = draftFromAi(gen(10), fullBank, 10, seeded());
+    const swapped = swapQuestion(draft, 4, fullBank, seeded(3));
+    expect(swapped[4].questionId).toMatch(/^q\d+$/);
+    expect(swapped[4].text).toBeUndefined();
+  });
+});
+
+describe("toTemplate", () => {
+  it("swaps the creator's name for the placeholder, whole words only", () => {
+    expect(toTemplate("What's Riya's go-to snack?", "Riya")).toBe("What's {name}'s go-to snack?");
+    expect(toTemplate("Does Riyaan like Riya?", "Riya")).toBe("Does Riyaan like {name}?");
+    expect(toTemplate("No name here", "")).toBe("No name here");
+    expect(fillName(toTemplate("Is A.J. late?", "A.J."), "Sam")).toBe("Is Sam late?");
+  });
+});
+
+describe("draftFromSaved", () => {
+  it("restores bank, edited and own questions for editing", () => {
+    const draft = draftFromSaved(
+      [
+        {
+          question_id: "q1",
+          prompt: "{name}'s thing 1?",
+          prompt_self: "My thing 1?",
+          options: ["A", "B", "C", "D"],
+          correct_option: 2,
+          source: "bank",
+        },
+        {
+          question_id: "q2",
+          prompt: "Edited {name}?",
+          prompt_self: null,
+          options: ["A", "B", "C", "D"],
+          correct_option: 1,
+          source: "edited",
+        },
+        {
+          question_id: null,
+          prompt: "AI {name}?",
+          prompt_self: "AI me?",
+          options: ["W", "X", "Y", "Z"],
+          correct_option: 0,
+          source: "ai",
+        },
+        {
+          question_id: "gone",
+          prompt: "Old {name}?",
+          prompt_self: "Old me?",
+          options: ["A", "B", "C", "D"],
+          correct_option: 3,
+          source: "bank",
+        },
+      ],
+      byId,
+    );
+    expect(draft.map((d) => [d.questionId, d.answer, d.source ?? null, Boolean(d.text)])).toEqual([
+      ["q1", 2, null, false],
+      ["q2", 1, null, true],
+      [null, 0, "ai", true],
+      [null, 3, "custom", true],
+    ]);
   });
 });

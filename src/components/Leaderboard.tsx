@@ -7,12 +7,16 @@ export interface LeaderboardRow {
   name: string;
   answers: boolean[];
   isMe?: boolean;
+  /** Rank from the server. When given, rows keep this order and number. */
+  rank?: number;
 }
 
 export function rankRows(rows: LeaderboardRow[]) {
-  return rows
-    .map((r) => ({ ...r, score: r.answers.filter(Boolean).length }))
-    .sort((a, b) => b.score - a.score);
+  const scored = rows.map((r) => ({ ...r, score: r.answers.filter(Boolean).length }));
+  if (scored.every((r) => r.rank !== undefined)) {
+    return scored.sort((a, b) => (a.rank as number) - (b.rank as number));
+  }
+  return scored.sort((a, b) => b.score - a.score);
 }
 
 export function Leaderboard({
@@ -34,10 +38,10 @@ export function Leaderboard({
           <span
             className={cn(
               "font-mono font-bold tabular-nums",
-              i === 0 ? "text-pink" : "text-ink-soft",
+              (r.rank ?? i + 1) === 1 ? "text-pink" : "text-ink-soft",
             )}
           >
-            {i + 1}
+            {r.rank ?? i + 1}
           </span>
           <span className={cn("truncate font-semibold", r.isMe && "text-pink-ink")}>
             {r.name}

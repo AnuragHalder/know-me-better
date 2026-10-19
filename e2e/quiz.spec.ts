@@ -15,3 +15,11 @@ test("an unknown play code says so and offers to make a quiz", async ({ page }) 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("No quiz with code ZZZZZZ");
   await expect(page.getByRole("link", { name: "Make your own quiz" })).toBeVisible();
 });
+
+test("a friend's code from the home page opens that quiz", async ({ page }) => {
+  await page.goto("/");
+  await page.getByLabel("Got a friend's code?").fill("zz zz zz");
+  await page.getByRole("button", { name: "Play" }).click();
+  await expect(page).toHaveURL(/\/play\/ZZZZZZ$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("No quiz with code ZZZZZZ");
+});
