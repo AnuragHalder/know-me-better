@@ -22,6 +22,11 @@
   --good-bg: #ddf5e8;
   --bad: #c2362f;
   --bad-bg: #fbe2df;
+  --note: #ffe45c;
+  --on-note: #1d3270;
+  --on-note-soft: #33406a;
+  --note-field: #ffffff;
+  --tape: rgb(200 210 230 / 0.7);
   --shadow: 0 1px 0 rgb(29 50 112 / 0.06), 0 10px 30px -18px rgb(29 50 112 / 0.35);
 }
 
@@ -31,8 +36,8 @@
     --sheet: #181b27;
     --rule: #252b3f;
     --margin: #5c2b36;
-    --ink: #c9d6ff;
-    --ink-soft: #8c97bc;
+    --ink: #dbe4ff;
+    --ink-soft: #a9b3d6;
     --line: #2a3046;
     --hi: #e8c93a;
     --on-hi: #11131c;
@@ -42,6 +47,8 @@
     --good-bg: #173528;
     --bad: #ff7c72;
     --bad-bg: #3a1c1c;
+    --note: #f2d75a;
+    --tape: rgb(255 255 255 / 0.35);
     --shadow: 0 10px 30px -18px rgb(0 0 0 / 0.8);
     color-scheme: dark;
   }
@@ -63,6 +70,11 @@
   --color-good-bg: var(--good-bg);
   --color-bad: var(--bad);
   --color-bad-bg: var(--bad-bg);
+  --color-note: var(--note);
+  --color-on-note: var(--on-note);
+  --color-on-note-soft: var(--on-note-soft);
+  --color-note-field: var(--note-field);
+  --color-tape: var(--tape);
 
   --font-sans: "Figtree Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-hand: "Kalam", "Comic Sans MS", cursive;

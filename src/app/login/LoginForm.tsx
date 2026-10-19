@@ -3,10 +3,17 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/Button";
+import { StickyNote } from "@/components/ui/StickyNote";
 import { friendlyAuthError } from "@/lib/auth-errors";
 import { getBrowserSupabase } from "@/lib/supabase/browser";
 
 const RESEND_SECONDS = 60;
+
+/** Inputs and buttons on the sticky note keep dark ink on yellow in both themes. */
+const NOTE_FIELD =
+  "min-h-12 rounded-[10px] border-2 border-on-note bg-note-field px-3.5 text-base text-on-note placeholder:text-on-note-soft/70";
+const NOTE_BUTTON =
+  "inline-flex min-h-12 items-center justify-center rounded-full bg-on-note px-5 font-bold text-note-field transition-transform hover:-translate-y-px active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60";
 
 type Step = { kind: "start" } | { kind: "code"; email: string };
 
@@ -103,83 +110,81 @@ export function LoginForm({ next, initialError }: { next: string; initialError?:
             Continue with Google
           </Button>
 
-          <div className="flex items-center gap-3 text-sm text-ink-soft" aria-hidden="true">
-            <span className="h-px flex-1 bg-line" />
-            or use your email
-            <span className="h-px flex-1 bg-line" />
-          </div>
-
-          <form onSubmit={sendCode} className="flex flex-col gap-2.5">
-            <label
-              htmlFor="email"
-              className="text-xs font-bold tracking-widest text-ink-soft uppercase"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              required
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="min-h-12 rounded-xl border-2 border-line bg-sheet px-3.5 text-base text-ink placeholder:text-ink-soft/70"
-            />
-            <Button type="submit" variant="ghost" disabled={!supabase || busy || !email.trim()}>
-              {busy ? "Sending…" : "Email me a sign-in link"}
-            </Button>
-          </form>
+          <StickyNote>
+            <h2 className="font-hand text-[22px] leading-tight font-bold">
+              No Google? Use your email
+            </h2>
+            <form onSubmit={sendCode} className="flex flex-col gap-2.5">
+              <label htmlFor="email" className="text-sm font-bold">
+                Your email
+              </label>
+              <input
+                id="email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                required
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={NOTE_FIELD}
+              />
+              <button type="submit" disabled={!supabase || busy} className={NOTE_BUTTON}>
+                {busy ? "Sending…" : "Email me a sign-in link"}
+              </button>
+              <p className="text-sm text-on-note-soft">
+                No password. Tap the link in the email and you&apos;re in.
+              </p>
+            </form>
+          </StickyNote>
         </>
       ) : (
-        <form onSubmit={verifyCode} className="flex flex-col gap-2.5">
-          <p className="text-ink-soft">
-            Check <b className="text-ink">{step.email}</b> and tap the sign-in link. Open it on this
-            phone, in this browser. It can take a minute to arrive; check spam too.
-          </p>
-          <label
-            htmlFor="code"
-            className="text-xs font-bold tracking-widest text-ink-soft uppercase"
-          >
-            Got a 6-digit code instead? Type it here
-          </label>
-          <input
-            id="code"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            pattern="[0-9 ]*"
-            maxLength={8}
-            autoFocus
-            placeholder="123456"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            className="min-h-12 rounded-xl border-2 border-line bg-sheet px-3.5 font-mono text-2xl tracking-[0.3em] text-ink placeholder:text-ink-soft/50"
-          />
-          <Button type="submit" variant="pink" disabled={busy}>
-            {busy ? "Checking…" : "Sign in"}
-          </Button>
-          <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-            <button
-              type="button"
-              className="min-h-11 text-ink-soft underline"
-              onClick={() => {
-                setStep({ kind: "start" });
-                setError("");
-              }}
-            >
-              Use a different email
+        <StickyNote>
+          <h2 className="font-hand text-[22px] leading-tight font-bold">Check your email</h2>
+          <form onSubmit={verifyCode} className="flex flex-col gap-2.5">
+            <p className="text-on-note">
+              We sent a sign-in link to <b className="break-all">{step.email}</b>. Open it on this
+              phone, in this browser. It can take a minute; check spam too.
+            </p>
+            <label htmlFor="code" className="text-sm font-bold">
+              Got a 6-digit code instead? Type it here
+            </label>
+            <input
+              id="code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="[0-9 ]*"
+              maxLength={8}
+              placeholder="123456"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              className={`${NOTE_FIELD} font-mono text-2xl tracking-[0.3em]`}
+            />
+            <button type="submit" disabled={busy} className={NOTE_BUTTON}>
+              {busy ? "Checking…" : "Sign in"}
             </button>
-            <button
-              type="button"
-              className="min-h-11 text-ink-soft underline disabled:no-underline disabled:opacity-60"
-              disabled={busy || cooldown > 0}
-              onClick={() => sendCode()}
-            >
-              {cooldown > 0 ? `Send again in ${cooldown}s` : "Send again"}
-            </button>
-          </div>
-        </form>
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+              <button
+                type="button"
+                className="min-h-11 font-semibold text-on-note underline"
+                onClick={() => {
+                  setStep({ kind: "start" });
+                  setError("");
+                }}
+              >
+                Use a different email
+              </button>
+              <button
+                type="button"
+                className="min-h-11 font-semibold text-on-note underline disabled:no-underline disabled:opacity-60"
+                disabled={busy || cooldown > 0}
+                onClick={() => sendCode()}
+              >
+                {cooldown > 0 ? `Send again in ${cooldown}s` : "Send again"}
+              </button>
+            </div>
+          </form>
+        </StickyNote>
       )}
 
       <p aria-live="polite" className="min-h-6 text-sm font-semibold text-bad">
