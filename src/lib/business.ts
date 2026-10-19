@@ -7,17 +7,17 @@
  */
 export const BUSINESS = {
   /** Legal name as on PAN / KYC: your own name, or your proprietorship's name. */
-  legalName: "[Legal business name]",
+  legalName: "Anurag Halder",
   /** Public contact email, ideally on the domain, e.g. hello@whoknowsmebetter.in */
-  email: "[hello@whoknowsmebetter.in]",
+  email: "hello@whoknowsmebetter.in",
   /** Public contact phone, with country code. */
-  phone: "[+91 XXXXX XXXXX]",
+  phone: "+91 88848 74557",
   /** Registered address, line by line. */
-  address: ["[Address line 1]", "[Address line 2]", "[City, State PIN]", "India"],
+  address: ["87 Diamond Harbour Road", "Kolkata, West Bengal 700060", "India"],
   /** City whose courts handle disputes (usually the city in your address). */
-  jurisdictionCity: "[City]",
+  jurisdictionCity: "Kolkata",
   /** Person who handles privacy and complaints (India's DPDP Act asks for one). */
-  grievanceOfficer: "[Name of grievance officer]",
+  grievanceOfficer: "Anurag Halder",
   /** GSTIN, once registered. Leave null until then. */
   gstin: null as string | null,
   /** Days within which a failed or duplicate payment can be refunded on request. */
