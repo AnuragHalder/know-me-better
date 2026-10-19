@@ -1,3 +1,5 @@
+import { BRAND_NAME } from "@/lib/brand";
+
 /** Path friends open to play a quiz. */
 export function playPath(code: string): string {
   return `/play/${code}`;
@@ -6,7 +8,7 @@ export function playPath(code: string): string {
 /** The invite a creator sends to friends. */
 export function inviteText(url: string, code: string): string {
   return [
-    "Think you know me? Take my Know Me Better quiz and see where you land on my leaderboard.",
+    `Who knows me better? Take my quiz on ${BRAND_NAME} and see where you land on my leaderboard.`,
     url,
     `Code: ${code}`,
   ].join("\n");

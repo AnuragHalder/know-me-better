@@ -6,7 +6,7 @@ import { loadBank } from "@/lib/quiz/bank";
 import { startDraft } from "@/lib/quiz/build";
 import { getCurrentUser, getServerSupabase } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Make your quiz · Know Me Better" };
+export const metadata: Metadata = { title: "Make your quiz" };
 
 export default async function CreatePage() {
   const user = await getCurrentUser();

@@ -7,7 +7,7 @@ import { Button, ButtonLink } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { getCurrentUser, getServerSupabase } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Your quizzes · Know Me Better" };
+export const metadata: Metadata = { title: "Your quizzes" };
 
 interface QuizRow {
   id: string;

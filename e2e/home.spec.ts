@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("home page shows the pitch and the example leaderboard", async ({ page }) => {
   await page.goto("/");
-  await expect(page).toHaveTitle("Know Me Better");
+  await expect(page).toHaveTitle("Who Knows Me Better");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("knows you");
   await expect(page.getByText("Example", { exact: true })).toBeVisible();
   await expect(page.getByRole("listitem").filter({ hasText: "Meera" })).toContainText("9/10");

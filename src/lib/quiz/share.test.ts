@@ -6,7 +6,7 @@ describe("sharing", () => {
     expect(playPath("K7PX2Q")).toBe("/play/K7PX2Q");
     const text = inviteText("https://example.app/play/K7PX2Q", "K7PX2Q");
     expect(text.split("\n")).toEqual([
-      expect.stringContaining("Think you know me?"),
+      expect.stringContaining("Who knows me better?"),
       "https://example.app/play/K7PX2Q",
       "Code: K7PX2Q",
     ]);

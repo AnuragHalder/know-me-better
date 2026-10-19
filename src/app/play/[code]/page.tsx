@@ -4,7 +4,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { getServerSupabase } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Play · Know Me Better" };
+export const metadata: Metadata = { title: "Play" };
 
 /** Placeholder until Phase 5: confirms the link works and whose quiz it is. */
 export default async function PlayPage({ params }: { params: Promise<{ code: string }> }) {

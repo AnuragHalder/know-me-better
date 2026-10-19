@@ -6,11 +6,21 @@ import "@fontsource/kalam/latin-700.css";
 import "@fontsource/jetbrains-mono/latin-500.css";
 import "@fontsource/jetbrains-mono/latin-700.css";
 import "./globals.css";
+import { BRAND_NAME, BRAND_TAGLINE, SITE_URL } from "@/lib/brand";
 
 export const metadata: Metadata = {
-  title: "Know Me Better",
-  description:
-    "Answer 10 questions about yourself, send the link, and see which friend really knows you.",
+  metadataBase: new URL(SITE_URL),
+  title: { default: BRAND_NAME, template: `%s · ${BRAND_NAME}` },
+  description: BRAND_TAGLINE,
+  applicationName: BRAND_NAME,
+  openGraph: {
+    type: "website",
+    siteName: BRAND_NAME,
+    title: BRAND_NAME,
+    description: BRAND_TAGLINE,
+    locale: "en_IN",
+  },
+  twitter: { card: "summary", title: BRAND_NAME, description: BRAND_TAGLINE },
 };
 
 export const viewport: Viewport = {

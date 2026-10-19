@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BRAND_NAME } from "@/lib/brand";
 import { getCurrentUser } from "@/lib/supabase/server";
 
 export async function SiteHeader() {
@@ -9,7 +10,7 @@ export async function SiteHeader() {
   return (
     <header className="flex items-center justify-between gap-3">
       <Link href="/" className="font-hand text-2xl font-bold text-ink no-underline">
-        <span className="highlight">Know Me Better</span>
+        <span className="highlight">{BRAND_NAME}</span>
       </Link>
       {signedIn ? (
         <Link

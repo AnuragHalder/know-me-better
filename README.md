@@ -1,11 +1,20 @@
-# Know Me Better
+# Who Knows Me Better
 
 A slam-book friendship quiz. You answer 10 questions about yourself, share a link, and friends
 compete on a live leaderboard to prove who knows you best.
 
 Stack: Next.js (App Router) · TypeScript · Tailwind CSS · Supabase · Razorpay · Vercel.
-The build plan is in [docs/ROADMAP.md](docs/ROADMAP.md); the database is described in
-[docs/DATABASE.md](docs/DATABASE.md).
+Live at https://whoknowsmebetter.in (once the domain is connected).
+
+| Doc                                  | What it covers                                    |
+| ------------------------------------ | ------------------------------------------------- |
+| [docs/ROADMAP.md](docs/ROADMAP.md)   | The build plan, phase by phase                    |
+| [docs/DATABASE.md](docs/DATABASE.md) | Tables, functions and security rules              |
+| [docs/LAUNCH.md](docs/LAUNCH.md)     | Domain, Vercel, Supabase, Google and email setup  |
+| [docs/RAZORPAY.md](docs/RAZORPAY.md) | Taking payments, from website review to live mode |
+
+Business details shown on the policy pages live in `src/lib/business.ts`; prices in
+`src/lib/pricing.ts`.
 
 ## Run it locally
 
