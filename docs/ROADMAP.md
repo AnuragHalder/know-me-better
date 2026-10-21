@@ -14,7 +14,7 @@ been tried on the Vercel preview link. The next phase branches from the updated 
 | 6   | Dashboard, leaderboard | Live scores (refresh every 10 s), top 10 free, blurred rows past 10, per-question "got it" stats, dashboard with top scorer               | Scores appear live                       |
 | 7   | Sharing                | Result image card, WhatsApp share, link previews                                                                                          | Shared links show a preview card         |
 | —   | **Free launch**        | Policy pages ✅, domain whoknowsmebetter.in, analytics, real ads                                                                          | Live on the domain                       |
-| 8   | Payments               | Razorpay checkout, verified webhook, unlocks: Reveal ₹29, Full board ₹49, Second chance ₹10                                               | Test payments unlock features            |
+| 8   | Payments               | Razorpay checkout, verified webhook, unlocks: Reveal ₹29, Full board ₹49, Second chance ₹9, Lock retries ₹29                              | Test payments unlock features            |
 | 9   | Pro and editions       | UPI AutoPay subscription, Couples and Birthday packs                                                                                      | Test subscription works                  |
 | 10  | Ads and polish         | Rewarded ads, admin view, performance and accessibility pass                                                                              | Ready to scale                           |
 

@@ -8,15 +8,16 @@ business registration.
 
 Single source of truth: `src/lib/pricing.ts` (shown on `/pricing`).
 
-| Product id         | Name             | Price   | Type                  |
-| ------------------ | ---------------- | ------- | --------------------- |
-| `reveal`           | Reveal answers   | ₹29     | one-time, one quiz    |
-| `full_board`       | Full leaderboard | ₹49     | one-time, one quiz    |
-| `second_chance`    | Second chance    | ₹10     | one-time, one attempt |
-| `edition_birthday` | Birthday edition | ₹49     | one-time, one quiz    |
-| `edition_couples`  | Couples edition  | ₹99     | one-time, one quiz    |
-| `pro_monthly`      | Pro, monthly     | ₹99/mo  | subscription          |
-| `pro_yearly`       | Pro, yearly      | ₹699/yr | subscription          |
+| Product id         | Name             | Price   | Type                                                  |
+| ------------------ | ---------------- | ------- | ----------------------------------------------------- |
+| `reveal`           | Reveal answers   | ₹29     | one-time, one quiz                                    |
+| `full_board`       | Full leaderboard | ₹49     | one-time, one quiz                                    |
+| `second_chance`    | Second chance    | ₹9      | one-time, one attempt                                 |
+| `lock_retries`     | Lock retries     | ₹29     | one-time, one quiz (creator turns off second chances) |
+| `edition_birthday` | Birthday edition | ₹49     | one-time, one quiz                                    |
+| `edition_couples`  | Couples edition  | ₹99     | one-time, one quiz                                    |
+| `pro_monthly`      | Pro, monthly     | ₹99/mo  | subscription                                          |
+| `pro_yearly`       | Pro, yearly      | ₹699/yr | subscription                                          |
 
 A test (`src/lib/pricing.test.ts`) fails if this list and the database's allowed products drift
 apart.
@@ -76,7 +77,7 @@ When asked, describe the business plainly:
 > Who Knows Me Better (whoknowsmebetter.in) is an online friendship-quiz web app. Users create
 > a quiz about themselves and share it with friends. Playing is free. We sell optional digital
 > features delivered instantly in the app: revealing friends' answers, full leaderboards,
-> themed editions and a Pro subscription (₹10–₹699). No real-money gaming, betting or prizes.
+> themed editions and a Pro subscription (₹9–₹699). No real-money gaming, betting or prizes.
 
 Paste the page URLs from the table above. Expect follow-up questions; reply from the
 registered email.
@@ -140,7 +141,7 @@ In test mode, use Razorpay's test UPI ID / test cards from their docs. Check:
    plans in live mode (test and live are separate).
 3. In Vercel, replace the Razorpay values **for Production only** with live ones; keep test
    values on Preview so pull-request previews never charge real money.
-4. Redeploy production. Make one real ₹10 purchase, then refund it from the dashboard.
+4. Redeploy production. Make one real ₹9 purchase, then refund it from the dashboard.
 
 ## 8. After launch
 

@@ -5,9 +5,10 @@ import { DeleteQuizButton } from "@/components/DeleteQuizButton";
 import { LiveLeaderboard } from "@/components/LiveLeaderboard";
 import { PageShell } from "@/components/PageShell";
 import { ShareBox } from "@/components/ShareBox";
-import { ButtonLink } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { siteOrigin } from "@/lib/origin";
+import { formatRupees, PRODUCTS } from "@/lib/pricing";
 import type { Board } from "@/lib/quiz/board";
 import { fillName } from "@/lib/quiz/build";
 import { loadOwnerQuiz } from "@/lib/quiz/owner";
@@ -34,12 +35,21 @@ export default async function OwnerQuizPage({
 
   const url = `${await siteOrigin()}${playPath(quiz.code)}`;
 
-  const [{ data: boardData }, { data: statsData }] = await Promise.all([
+  const [{ data: boardData }, { data: statsData }, { data: lockData }] = await Promise.all([
     supabase.rpc("get_leaderboard", { p_quiz_id: quiz.id }),
     quiz.play_count > 0
       ? supabase.rpc("quiz_question_stats", { p_quiz_id: quiz.id })
       : Promise.resolve({ data: null }),
+    supabase
+      .from("purchases")
+      .select("id")
+      .eq("product", "lock_retries")
+      .eq("quiz_id", quiz.id)
+      .eq("status", "paid")
+      .limit(1)
+      .maybeSingle(),
   ]);
+  const retriesLocked = Boolean(lockData);
   const board = (boardData as Board | null) ?? null;
   const stats = new Map(
     ((statsData as QuestionStat[] | null) ?? []).map((st) => [st.position, st]),
@@ -72,6 +82,8 @@ export default async function OwnerQuizPage({
           emptyText="No one has played yet. The leaderboard shows up here as friends finish."
         />
       </Sheet>
+
+      <RetriesCard locked={retriesLocked} />
 
       <Sheet>
         <div className="flex items-baseline justify-between gap-3">
@@ -141,5 +153,37 @@ function StatBar({ stat, hardest }: { stat: QuestionStat; hardest: boolean }) {
         <span className="rounded-full bg-hi px-1.5 font-bold text-on-hi">Fooled most friends</span>
       )}
     </span>
+  );
+}
+
+const SECOND_CHANCE = PRODUCTS.find((p) => p.id === "second_chance");
+const LOCK_RETRIES = PRODUCTS.find((p) => p.id === "lock_retries");
+
+/** Second chances are on by default; the creator can pay once to turn them off. */
+function RetriesCard({ locked }: { locked: boolean }) {
+  return (
+    <Sheet>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="font-bold">Second chances</h2>
+        <span className="text-sm font-semibold text-ink-soft">{locked ? "Off" : "On"}</span>
+      </div>
+      {locked ? (
+        <p className="text-ink-soft">Retries are locked. Every friend gets one go only.</p>
+      ) : (
+        <>
+          <p className="text-ink-soft">
+            After playing, a friend can pay{" "}
+            {SECOND_CHANCE ? formatRupees(SECOND_CHANCE.amountPaise) : ""} to replay your quiz;
+            their best score counts. Want one go only?
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="ghost" size="sm" disabled>
+              Lock retries for {LOCK_RETRIES ? formatRupees(LOCK_RETRIES.amountPaise) : ""}
+            </Button>
+            <span className="text-xs text-ink-soft">Payments open soon</span>
+          </div>
+        </>
+      )}
+    </Sheet>
   );
 }

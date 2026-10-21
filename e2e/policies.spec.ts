@@ -35,7 +35,8 @@ test("common policy addresses redirect to our pages", async ({ page }) => {
 
 test("pricing shows rupee prices", async ({ page }) => {
   await page.goto("/pricing");
-  await expect(page.getByText("₹29", { exact: true })).toBeVisible();
+  await expect(page.getByText("₹29", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("₹9", { exact: true })).toBeVisible();
   await expect(page.getByText("₹99/month", { exact: true })).toBeVisible();
 });
 
