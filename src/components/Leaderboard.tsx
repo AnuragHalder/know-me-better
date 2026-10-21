@@ -22,9 +22,12 @@ export function rankRows(rows: LeaderboardRow[]) {
 export function Leaderboard({
   rows,
   emptyText = "No one has played yet. Send your link to a friend.",
+  fresh,
 }: {
   rows: LeaderboardRow[];
   emptyText?: string;
+  /** Row ids to flash briefly: friends who just finished. */
+  fresh?: ReadonlySet<string>;
 }) {
   if (rows.length === 0) return <p className="py-2 text-ink-soft">{emptyText}</p>;
 
@@ -33,7 +36,8 @@ export function Leaderboard({
       {rankRows(rows).map((r, i) => (
         <li
           key={r.id}
-          className="grid grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1 border-t border-line py-2.5 first:border-t-0"
+          data-fresh={fresh?.has(r.id) || undefined}
+          className="grid data-fresh:motion-safe:animate-[fresh_2.4s_ease-out]  grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1 border-t border-line py-2.5 first:border-t-0"
         >
           <span
             className={cn(

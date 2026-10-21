@@ -104,6 +104,18 @@
   }
 }
 
+/* A friend who just finished: their row glows with the highlighter, then fades. */
+@keyframes fresh {
+  0%,
+  40% {
+    background-color: var(--hi);
+    color: var(--on-hi);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
 @keyframes stamp {
   from {
     transform: scale(0.6) rotate(-12deg);

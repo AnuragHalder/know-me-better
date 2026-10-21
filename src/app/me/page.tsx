@@ -5,6 +5,8 @@ import { signOut } from "@/app/actions/auth";
 import { PageShell } from "@/components/PageShell";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
+import { timeAgo } from "@/lib/quiz/board";
+import { QUESTIONS_PER_QUIZ } from "@/lib/quiz/verdict";
 import { getCurrentUser, getServerSupabase } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Your quizzes" };
@@ -15,6 +17,8 @@ interface QuizRow {
   owner_name: string;
   play_count: number;
   created_at: string;
+  last_played_at: string | null;
+  top: { player_name: string; score: number } | null;
 }
 
 const dateFormat = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short" });
@@ -29,12 +33,7 @@ export default async function MePage({
   if (!user || user.isGuest) redirect("/login?next=/me");
 
   const supabase = await getServerSupabase();
-  const { data } = supabase
-    ? await supabase
-        .from("quizzes")
-        .select("id, code, owner_name, play_count, created_at")
-        .order("created_at", { ascending: false })
-    : { data: [] };
+  const { data } = supabase ? await supabase.rpc("my_quizzes") : { data: [] };
   const quizzes = (data ?? []) as QuizRow[];
   const firstName = user.name?.split(" ")[0];
 
@@ -81,11 +80,21 @@ export default async function MePage({
                 >
                   <span className="truncate font-semibold">{q.owner_name}&apos;s page</span>
                   <span className="font-mono text-sm font-bold tracking-widest">{q.code}</span>
-                  <span className="text-sm text-ink-soft">
-                    Made {dateFormat.format(new Date(q.created_at))}
+                  <span className="truncate text-sm text-ink-soft">
+                    {q.top ? (
+                      <>
+                        <b className="text-ink">{q.top.player_name}</b> leads, {q.top.score}/
+                        {QUESTIONS_PER_QUIZ}
+                      </>
+                    ) : (
+                      `Made ${dateFormat.format(new Date(q.created_at))}`
+                    )}
                   </span>
                   <span className="text-right text-sm text-ink-soft tabular-nums">
                     {q.play_count} played
+                    {q.last_played_at && (
+                      <span className="block text-xs">last {timeAgo(q.last_played_at)}</span>
+                    )}
                   </span>
                 </Link>
               </li>
