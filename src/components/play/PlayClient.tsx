@@ -2,12 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Leaderboard, type LeaderboardRow } from "@/components/Leaderboard";
+import { LiveLeaderboard } from "@/components/LiveLeaderboard";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { ScoreGrid } from "@/components/ui/ScoreGrid";
 import { Sheet } from "@/components/ui/Sheet";
 import { Stamp } from "@/components/ui/Stamp";
 import { cn } from "@/lib/cn";
+import type { Board } from "@/lib/quiz/board";
 import { MAX_NAME_LENGTH, cleanName, nameProblem } from "@/lib/names";
 import { fillName } from "@/lib/quiz/build";
 import { quizErrorMessage } from "@/lib/quiz/errors";
@@ -40,12 +41,6 @@ interface Reveal {
   picked: number;
   correct: number;
 }
-
-type Board = {
-  total: number;
-  my_rank: number | null;
-  rows: { rank: number; player_name: string; score: number; results: boolean[]; is_me: boolean }[];
-};
 
 const NAME_KEY = "wkmb:player-name";
 const ADVANCE_MS = 1600;
@@ -313,22 +308,9 @@ function PlayResult({
   url: string;
 }) {
   const score = results.filter(Boolean).length;
-  const [loaded, setBoard] = useState<Board | "failed" | null>(null);
-  const board = loaded === "failed" ? null : loaded;
+  const [board, setBoard] = useState<Board | null>(null);
   const [note, setNote] = useState("");
   const text = resultText(quiz.ownerName, results, url);
-
-  useEffect(() => {
-    const supabase = getBrowserSupabase();
-    if (!supabase) {
-      setBoard("failed");
-      return;
-    }
-    supabase.rpc("get_leaderboard", { p_quiz_id: quiz.id }).then(
-      ({ data }) => setBoard(data ? (data as Board) : "failed"),
-      () => setBoard("failed"),
-    );
-  }, [quiz.id]);
 
   async function copy() {
     try {
@@ -338,15 +320,6 @@ function PlayResult({
       setNote("Copy didn't work here. Use WhatsApp instead.");
     }
   }
-
-  const rows: LeaderboardRow[] =
-    board?.rows.map((r) => ({
-      id: `${r.rank}-${r.player_name}`,
-      name: r.player_name,
-      answers: r.results,
-      isMe: r.is_me,
-      rank: r.rank,
-    })) ?? [];
 
   return (
     <>
@@ -387,23 +360,13 @@ function PlayResult({
       </Sheet>
 
       <Sheet>
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 className="font-bold">Who knows {quiz.ownerName} best</h2>
-          {board && (
-            <span className="font-mono text-sm text-ink-soft tabular-nums">
-              {board.total} played
-            </span>
-          )}
-        </div>
-        {board ? (
-          <Leaderboard rows={rows} />
-        ) : (
-          <p className="py-2 text-ink-soft">
-            {loaded === "failed"
-              ? "The leaderboard didn't load. Reload the page to see it."
-              : "Loading the leaderboard…"}
-          </p>
-        )}
+        <LiveLeaderboard
+          quizId={quiz.id}
+          title={`Who knows ${quiz.ownerName} best`}
+          ownerName={quiz.ownerName}
+          viewer="friend"
+          onBoard={setBoard}
+        />
       </Sheet>
 
       <Sheet ruled>
