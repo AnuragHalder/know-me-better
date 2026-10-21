@@ -24,10 +24,17 @@ const loadQuiz = cache(async (raw: string): Promise<PlayQuiz | null> => {
     id: string;
     code: string;
     owner_name: string;
+    retries_locked?: boolean;
     questions: PlayQuiz["questions"] | null;
   } | null;
   if (!q?.questions?.length) return null;
-  return { id: q.id, code: q.code, ownerName: q.owner_name, questions: q.questions };
+  return {
+    id: q.id,
+    code: q.code,
+    ownerName: q.owner_name,
+    retriesLocked: Boolean(q.retries_locked),
+    questions: q.questions,
+  };
 });
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -67,14 +74,24 @@ export default async function PlayPage({ params }: Params) {
 
   if (user && supabase) {
     // Row-level security: the owner can read their own quiz, a player their own attempts.
-    const [{ data: own }, { data: attempt }] = await Promise.all([
+    const [{ data: own }, { data: attempt }, { data: chance }] = await Promise.all([
       supabase.from("quizzes").select("id").eq("id", quiz.id).maybeSingle(),
       supabase
         .from("attempts")
-        .select("id, player_name, results, finished_at")
+        .select("id, attempt_no, player_name, results, finished_at")
         .eq("quiz_id", quiz.id)
         .eq("player_id", user.id)
         .order("attempt_no", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      // A paid second chance for this quiz (buyers can read their own purchases).
+      supabase
+        .from("purchases")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("product", "second_chance")
+        .eq("quiz_id", quiz.id)
+        .eq("status", "paid")
         .limit(1)
         .maybeSingle(),
     ]);
@@ -105,13 +122,33 @@ export default async function PlayPage({ params }: Params) {
     if (attempt) {
       const a = attempt as {
         id: string;
+        attempt_no: number;
         player_name: string;
         results: boolean[] | null;
         finished_at: string | null;
       };
       start = a.finished_at
-        ? { kind: "finished", playerName: a.player_name, results: a.results ?? [] }
-        : { kind: "resume", attemptId: a.id, playerName: a.player_name, results: a.results ?? [] };
+        ? {
+            kind: "finished",
+            playerName: a.player_name,
+            results: a.results ?? [],
+            // The database decides for real in start_attempt; this only picks what to show.
+            retry:
+              a.attempt_no >= 2
+                ? "used"
+                : chance
+                  ? "ready"
+                  : quiz.retriesLocked
+                    ? "locked"
+                    : "offer",
+          }
+        : {
+            kind: "resume",
+            attemptId: a.id,
+            attemptNo: a.attempt_no,
+            playerName: a.player_name,
+            results: a.results ?? [],
+          };
     }
   }
 

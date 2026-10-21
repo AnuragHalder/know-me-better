@@ -31,9 +31,11 @@ describe("PlayClient", () => {
 
   it("plays through: name, answers with reveal, then the result", async () => {
     rpc.mockImplementation(async (fn: string, args: Record<string, unknown>) => {
-      if (fn === "start_attempt") return { data: { attempt_id: "a1", answered: 0 }, error: null };
+      if (fn === "start_attempt") {
+        return { data: { attempt_id: "a1", answered: 0, attempt_no: 1 }, error: null };
+      }
       if (fn === "answer_question") {
-        return { data: { correct_option: 1, is_correct: args.p_choice === 1 }, error: null };
+        return { data: { is_correct: args.p_choice === 1 }, error: null };
       }
       if (fn === "get_leaderboard") {
         return {
@@ -67,7 +69,10 @@ describe("PlayClient", () => {
     expect(rpc).toHaveBeenCalledWith("start_attempt", { p_code: "ABCDEF", p_player_name: "Meera" });
 
     fireEvent.click(screen.getByRole("button", { name: "Cutting" }));
-    await screen.findByText("Nope. Riya picked “Masala”.");
+    await screen.findByText("Not quite. That's not Riya's answer.");
+    expect(screen.queryByText(/Masala.*picked|picked.*Masala/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cutting" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Masala" })).toHaveAttribute("aria-pressed", "false");
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
 
     await screen.findByText("Riya's city?");
@@ -79,6 +84,7 @@ describe("PlayClient", () => {
 
     await screen.findByText(/#1/);
     expect(screen.getByText("Good friend")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try again for ₹9" })).toBeDisabled();
     expect(screen.getByRole("link", { name: "Share on WhatsApp" }).getAttribute("href")).toContain(
       encodeURIComponent("I got 1/2 on Riya's quiz"),
     );
@@ -89,7 +95,7 @@ describe("PlayClient", () => {
     render(
       <PlayClient
         quiz={quiz}
-        start={{ kind: "finished", playerName: "Meera", results: [true, true] }}
+        start={{ kind: "finished", playerName: "Meera", results: [true, true], retry: "used" }}
         url="https://x/play/ABCDEF"
       />,
     );
@@ -104,5 +110,36 @@ describe("PlayClient", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Start the quiz" }));
     await vi.waitFor(() => expect(refresh).toHaveBeenCalled());
+  });
+
+  it("starts a paid second round from the result screen", async () => {
+    rpc.mockImplementation(async (fn: string) =>
+      fn === "start_attempt"
+        ? { data: { attempt_id: "a2", answered: 0, attempt_no: 2 }, error: null }
+        : { data: null, error: null },
+    );
+    render(
+      <PlayClient
+        quiz={quiz}
+        start={{ kind: "finished", playerName: "Meera", results: [false, false], retry: "ready" }}
+        url="https://x"
+      />,
+    );
+    expect(screen.queryByRole("button", { name: /Try again for/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Play again" }));
+    await screen.findByText("Riya's chai order?");
+    expect(rpc).toHaveBeenCalledWith("start_attempt", { p_code: "ABCDEF", p_player_name: "Meera" });
+  });
+
+  it("offers no retry when the creator locked retries", async () => {
+    rpc.mockResolvedValue({ data: null, error: null });
+    render(
+      <PlayClient
+        quiz={{ ...quiz, retriesLocked: true }}
+        start={{ kind: "finished", playerName: "Meera", results: [true, false], retry: "locked" }}
+        url="https://x"
+      />,
+    );
+    expect(screen.queryByText("Think you can do better?")).not.toBeInTheDocument();
   });
 });

@@ -219,7 +219,7 @@ describe("keeping answers secret", () => {
 });
 
 describe("playing", () => {
-  it("scores on the server and reveals each answer only after it is given", async () => {
+  it("scores on the server and says only right or wrong", async () => {
     const owner = await createUser(db);
     const quiz = await newQuiz(owner, (i) => i % 4);
     const friend = await createUser(db, { anonymous: true });
@@ -229,9 +229,9 @@ describe("playing", () => {
     ]);
 
     const first = await rpc(db, friend, "answer_question", [attempt_id, 0]);
-    expect(first).toMatchObject({ position: 0, correct_option: 0, is_correct: true, score: 1 });
+    expect(first).toEqual({ position: 0, is_correct: true, finished: false, score: 1 });
     const second = await rpc(db, friend, "answer_question", [attempt_id, 0]);
-    expect(second).toMatchObject({ position: 1, correct_option: 1, is_correct: false, score: 1 });
+    expect(second).toEqual({ position: 1, is_correct: false, finished: false, score: 1 });
   });
 
   it("finishes after 10 answers and counts the play", async () => {
@@ -259,7 +259,7 @@ describe("playing", () => {
     const a = await rpc<{ attempt_id: string }>(db, friend, "start_attempt", [quiz.code, "Kabir"]);
     await rpc(db, friend, "answer_question", [a.attempt_id, 0]);
     const resumed = await rpc(db, friend, "start_attempt", [quiz.code, "Kabir"]);
-    expect(resumed).toEqual({ attempt_id: a.attempt_id, answered: 1 });
+    expect(resumed).toEqual({ attempt_id: a.attempt_id, answered: 1, attempt_no: 1 });
 
     for (let i = 1; i < 10; i++) await rpc(db, friend, "answer_question", [a.attempt_id, 0]);
     await expect(rpc(db, friend, "start_attempt", [quiz.code, "Kabir"])).rejects.toThrow(

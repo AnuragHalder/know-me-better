@@ -10,8 +10,9 @@ describe("price list", () => {
     const sql = readdirSync(dir)
       .map((f) => readFileSync(join(dir, f), "utf8"))
       .join("\n");
-    const block = sql.match(/product in \(([\s\S]*?)\)/);
-    expect(block).not.toBeNull();
+    // The latest definition of the purchases.product check wins.
+    const block = [...sql.matchAll(/check \(\s*product in \(([\s\S]*?)\)/g)].at(-1);
+    expect(block).toBeDefined();
     const dbProducts = [...block![1].matchAll(/'([a-z_]+)'/g)].map((m) => m[1]).sort();
     expect(PRODUCTS.map((p) => p.id).sort()).toEqual(dbProducts);
   });

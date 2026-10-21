@@ -8,6 +8,7 @@ export interface Product {
     | "reveal"
     | "full_board"
     | "second_chance"
+    | "lock_retries"
     | "pro_monthly"
     | "pro_yearly"
     | "edition_couples"
@@ -43,9 +44,17 @@ export const PRODUCTS: readonly Product[] = [
     id: "second_chance",
     name: "Second chance",
     description: "Play a friend's quiz one more time. Your best score counts.",
-    amountPaise: 1000,
+    amountPaise: 900,
     billing: "one_time",
     scope: "one attempt",
+  },
+  {
+    id: "lock_retries",
+    name: "Lock retries",
+    description: "Friends get one go only on your quiz: no second chances.",
+    amountPaise: 2900,
+    billing: "one_time",
+    scope: "one quiz",
   },
   {
     id: "edition_birthday",

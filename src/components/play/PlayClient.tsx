@@ -7,9 +7,11 @@ import { Button, ButtonLink } from "@/components/ui/Button";
 import { ScoreGrid } from "@/components/ui/ScoreGrid";
 import { Sheet } from "@/components/ui/Sheet";
 import { Stamp } from "@/components/ui/Stamp";
+import { StickyNote } from "@/components/ui/StickyNote";
 import { cn } from "@/lib/cn";
 import type { Board } from "@/lib/quiz/board";
 import { MAX_NAME_LENGTH, cleanName, nameProblem } from "@/lib/names";
+import { formatRupees, PRODUCTS } from "@/lib/pricing";
 import { fillName } from "@/lib/quiz/build";
 import { quizErrorMessage } from "@/lib/quiz/errors";
 import { resultText, whatsappHref } from "@/lib/quiz/share";
@@ -28,18 +30,28 @@ export interface PlayQuiz {
   id: string;
   code: string;
   ownerName: string;
+  /** The creator paid to turn off second chances. */
+  retriesLocked?: boolean;
   questions: PlayQuestion[];
 }
+
+/**
+ * Second round for a friend who finished: "offer" (they can buy one), "ready"
+ * (paid, not played yet), "used" (already had their second round) or "locked"
+ * (the creator turned retries off).
+ */
+export type Retry = "offer" | "ready" | "used" | "locked";
 
 /** Where the visitor stands with this quiz, worked out on the server. */
 export type PlayStart =
   | { kind: "new"; suggestedName: string }
-  | { kind: "resume"; attemptId: string; playerName: string; results: boolean[] }
-  | { kind: "finished"; playerName: string; results: boolean[] };
+  | { kind: "resume"; attemptId: string; attemptNo: number; playerName: string; results: boolean[] }
+  | { kind: "finished"; playerName: string; results: boolean[]; retry: Retry };
 
+/** The friend's guess and whether it matched. The owner's answer is never sent. */
 interface Reveal {
   picked: number;
-  correct: number;
+  correct: boolean;
 }
 
 const NAME_KEY = "wkmb:player-name";
@@ -70,6 +82,7 @@ export function PlayClient({
   );
   const [name, setName] = useState(start.kind === "new" ? start.suggestedName : start.playerName);
   const [attemptId, setAttemptId] = useState(start.kind === "resume" ? start.attemptId : "");
+  const [attemptNo, setAttemptNo] = useState(start.kind === "resume" ? start.attemptNo : 1);
   const [results, setResults] = useState<boolean[]>(start.kind === "new" ? [] : start.results);
   const [reveal, setReveal] = useState<Reveal | null>(null);
   const [busy, setBusy] = useState(false);
@@ -95,8 +108,8 @@ export function PlayClient({
   const question = quiz.questions[Math.min(index, total - 1)];
   const owner = quiz.ownerName;
 
-  async function begin(e: React.FormEvent) {
-    e.preventDefault();
+  async function begin(e?: React.FormEvent) {
+    e?.preventDefault();
     const problem = nameProblem(name);
     if (problem) {
       setError(problem);
@@ -125,14 +138,20 @@ export function PlayClient({
         }
         throw rpcError;
       }
-      const { attempt_id, answered } = data as { attempt_id: string; answered: number };
+      const { attempt_id, answered, attempt_no } = data as {
+        attempt_id: string;
+        answered: number;
+        attempt_no: number;
+      };
       if (answered > 0) {
         // Resumed on another tab; the server page has the answers so far.
         router.refresh();
         return;
       }
       setAttemptId(attempt_id);
+      setAttemptNo(attempt_no ?? 1);
       setName(playerName);
+      setResults([]);
       setStage("playing");
     } catch (err) {
       const message = err instanceof Error ? err.message : "";
@@ -171,9 +190,9 @@ export function PlayClient({
       setError(quizErrorMessage(rpcError?.message));
       return;
     }
-    const res = data as { correct_option: number; is_correct: boolean };
+    const res = data as { is_correct: boolean };
     const nextResults = [...results, res.is_correct];
-    setReveal({ picked: choice, correct: res.correct_option });
+    setReveal({ picked: choice, correct: res.is_correct });
     timer.current = setTimeout(() => next(nextResults), ADVANCE_MS);
     // Keep the pending results so "Next" can skip the wait.
     pendingRef.current = nextResults;
@@ -189,7 +208,8 @@ export function PlayClient({
           How well do you know <span className="highlight">{owner}</span>?
         </h1>
         <p className="text-ink-soft">
-          Guess what {owner} answered about themselves. One go only, so no peeking.
+          Guess what {owner} answered about themselves. You&apos;ll see right or wrong after each
+          guess, never {owner}&apos;s answer.
         </p>
         <form onSubmit={begin} className="flex flex-col gap-3" noValidate>
           <div className="flex flex-col gap-1.5">
@@ -224,7 +244,6 @@ export function PlayClient({
   }
 
   if (stage === "playing") {
-    const correctText = reveal ? question.options[reveal.correct] : "";
     return (
       <Sheet ruled>
         <div className="flex items-center justify-between gap-3">
@@ -245,15 +264,16 @@ export function PlayClient({
           className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-2"
         >
           {question.options.map((option, o) => {
-            const isCorrect = reveal?.correct === o;
-            const isWrongPick = reveal && reveal.picked === o && !isCorrect;
+            const isPicked = reveal?.picked === o;
+            const isCorrect = isPicked && reveal?.correct;
+            const isWrongPick = isPicked && !reveal?.correct;
             return (
               <button
                 key={`${question.position}-${o}`}
                 type="button"
                 onClick={() => pick(o)}
                 disabled={busy || Boolean(reveal)}
-                aria-pressed={reveal?.picked === o}
+                aria-pressed={isPicked}
                 className={cn(
                   "min-h-14 rounded-xl border-2 px-3.5 py-2 text-left text-lg leading-snug font-semibold break-words transition-colors",
                   !reveal && "border-line bg-sheet text-ink hover:border-ink",
@@ -271,15 +291,10 @@ export function PlayClient({
         <div className="flex min-h-12 items-center justify-between gap-3" aria-live="polite">
           {reveal ? (
             <>
-              <p
-                className={cn(
-                  "font-bold",
-                  reveal.picked === reveal.correct ? "text-good" : "text-bad",
-                )}
-              >
-                {reveal.picked === reveal.correct
+              <p className={cn("font-bold", reveal.correct ? "text-good" : "text-bad")}>
+                {reveal.correct
                   ? `Yes! ${owner} picked that.`
-                  : `Nope. ${owner} picked “${correctText}”.`}
+                  : `Not quite. That's not ${owner}'s answer.`}
               </p>
               <Button size="sm" onClick={() => next(pendingRef.current)}>
                 {index + 1 >= total ? "See score" : "Next"}
@@ -293,7 +308,27 @@ export function PlayClient({
     );
   }
 
-  return <PlayResult quiz={quiz} name={name} results={results} url={url} />;
+  const retry: Retry =
+    start.kind === "finished" && results === start.results
+      ? start.retry
+      : attemptNo >= 2
+        ? "used"
+        : quiz.retriesLocked
+          ? "locked"
+          : "offer";
+
+  return (
+    <PlayResult
+      quiz={quiz}
+      name={name}
+      results={results}
+      url={url}
+      retry={retry}
+      onPlayAgain={() => begin()}
+      busy={busy}
+      error={error}
+    />
+  );
 }
 
 function PlayResult({
@@ -301,11 +336,19 @@ function PlayResult({
   name,
   results,
   url,
+  retry,
+  onPlayAgain,
+  busy,
+  error,
 }: {
   quiz: PlayQuiz;
   name: string;
   results: boolean[];
   url: string;
+  retry: Retry;
+  onPlayAgain: () => void;
+  busy: boolean;
+  error: string;
 }) {
   const score = results.filter(Boolean).length;
   const [board, setBoard] = useState<Board | null>(null);
@@ -359,6 +402,16 @@ function PlayResult({
         </p>
       </Sheet>
 
+      {(retry === "offer" || retry === "ready") && (
+        <SecondChance
+          ownerName={quiz.ownerName}
+          ready={retry === "ready"}
+          onPlayAgain={onPlayAgain}
+          busy={busy}
+          error={error}
+        />
+      )}
+
       <Sheet>
         <LiveLeaderboard
           quizId={quiz.id}
@@ -381,5 +434,58 @@ function PlayResult({
         </div>
       </Sheet>
     </>
+  );
+}
+
+const SECOND_CHANCE = PRODUCTS.find((p) => p.id === "second_chance");
+
+/** "Try again": replay all questions; the best round counts on the leaderboard. */
+function SecondChance({
+  ownerName,
+  ready,
+  onPlayAgain,
+  busy,
+  error,
+}: {
+  ownerName: string;
+  ready: boolean;
+  onPlayAgain: () => void;
+  busy: boolean;
+  error: string;
+}) {
+  const price = SECOND_CHANCE ? formatRupees(SECOND_CHANCE.amountPaise) : "";
+  return (
+    <StickyNote>
+      <h2 className="font-hand text-2xl leading-tight font-bold">Think you can do better?</h2>
+      <p className="text-sm text-on-note-soft">
+        Play all the questions again. Your best score counts on {ownerName}&apos;s leaderboard.
+      </p>
+      {ready ? (
+        <div>
+          <button
+            type="button"
+            onClick={onPlayAgain}
+            disabled={busy}
+            className="min-h-11 rounded-full border-2 border-on-note bg-on-note px-4 text-sm font-bold text-note disabled:opacity-50"
+          >
+            {busy ? "Starting…" : "Play again"}
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled
+            className="min-h-11 rounded-full border-2 border-on-note bg-on-note px-4 text-sm font-bold text-note disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Try again for {price}
+          </button>
+          <span className="text-xs font-semibold text-on-note-soft">Payments open soon</span>
+        </div>
+      )}
+      <p aria-live="polite" className="text-sm font-semibold empty:hidden">
+        {error}
+      </p>
+    </StickyNote>
   );
 }

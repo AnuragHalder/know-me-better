@@ -83,7 +83,8 @@ describe("questions in the creator's own words", () => {
       "Meera",
     ]);
     const first = await rpc(db, friend, "answer_question", [attempt_id, 2]);
-    expect(first).toMatchObject({ is_correct: true, correct_option: 2 });
+    expect(first).toMatchObject({ is_correct: true });
+    expect(first).not.toHaveProperty("correct_option");
   });
 
   it.each([
