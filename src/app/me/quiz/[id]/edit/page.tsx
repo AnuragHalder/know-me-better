@@ -34,6 +34,7 @@ export default async function EditQuizPage({ params }: { params: Promise<{ id: s
         initialName={quiz.owner_name}
         quizId={quiz.id}
         aiStatus={aiStatus}
+        initialLook={quiz.look}
       />
     </PageShell>
   );

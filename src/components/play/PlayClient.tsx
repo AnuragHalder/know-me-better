@@ -30,6 +30,8 @@ export interface PlayQuiz {
   id: string;
   code: string;
   ownerName: string;
+  /** The creator's chosen look. */
+  look?: "notebook" | "clean";
   /** The creator paid to turn off second chances. */
   retriesLocked?: boolean;
   questions: PlayQuestion[];

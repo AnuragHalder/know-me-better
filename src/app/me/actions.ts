@@ -13,6 +13,7 @@ export interface SaveQuizInput {
   quizId?: string;
   ownerName: string;
   items: RpcItem[];
+  look?: "notebook" | "clean";
 }
 
 /**
@@ -61,6 +62,10 @@ export async function saveQuiz(input: SaveQuizInput): Promise<{ error: string }>
   if (error || !data) return { error: quizErrorMessage(error?.message) };
 
   const { id } = data as { id: string; code: string };
+  if (input.look) {
+    // Cosmetic: if this fails the quiz is still saved, in the notebook look.
+    await supabase.rpc("set_quiz_look", { p_quiz_id: id, p_look: input.look });
+  }
   redirect(input.quizId ? `/me/quiz/${id}?saved=1` : `/me/quiz/${id}?new=1`);
 }
 

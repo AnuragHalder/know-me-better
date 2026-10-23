@@ -6,6 +6,8 @@ import "@fontsource/kalam/latin-700.css";
 import "@fontsource/jetbrains-mono/latin-500.css";
 import "@fontsource/jetbrains-mono/latin-700.css";
 import "./globals.css";
+import { DEFAULT_LOOK } from "@/lib/look";
+import { visitorLook } from "@/lib/look-server";
 import { BRAND_NAME, BRAND_TAGLINE, SITE_URL } from "@/lib/brand";
 
 export const metadata: Metadata = {
@@ -33,9 +35,10 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const look = (await visitorLook()) ?? DEFAULT_LOOK;
   return (
-    <html lang="en">
+    <html lang="en" data-look={look}>
       <body className="min-h-dvh antialiased">{children}</body>
     </html>
   );

@@ -77,6 +77,7 @@ describe("QuizBuilder", () => {
     expect(saveQuiz).toHaveBeenCalledWith({
       quizId: undefined,
       ownerName: "  Riya  ",
+      look: "clean",
       items: bank.slice(0, 10).map((q) => ({ question_id: q.id, correct_option: 1 })),
     });
   });
@@ -156,5 +157,20 @@ describe("QuizBuilder", () => {
     expect(screen.getByText("New questions on Money.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Undo" }));
     expect(screen.getAllByText(/^Food question/)).toHaveLength(10);
+  });
+
+  it("previews and saves the chosen look", async () => {
+    saveQuiz.mockResolvedValue({ error: "stop" });
+    setup();
+    expect(document.documentElement.dataset.look).toBe("clean");
+    fireEvent.click(screen.getByRole("radio", { name: /Slambook/ }));
+    expect(document.documentElement.dataset.look).toBe("notebook");
+    fireEvent.click(screen.getByRole("radio", { name: /Clean/ }));
+    for (let i = 0; i < 10; i++) fireEvent.click(screen.getByRole("radio", { name: `A${i}` }));
+    fireEvent.click(screen.getByRole("button", { name: "Save and get my link" }));
+    await screen.findByText("stop");
+    expect(saveQuiz.mock.calls[0][0].look).toBe("clean");
+    fireEvent.click(screen.getByRole("radio", { name: /Slambook/ }));
+    expect(document.documentElement.dataset.look).toBe("notebook");
   });
 });
