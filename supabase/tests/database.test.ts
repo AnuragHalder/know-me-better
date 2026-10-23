@@ -44,15 +44,15 @@ async function play(code: string, name: string, pick: (i: number) => number) {
 }
 
 describe("question bank", () => {
-  it("has at least 40 active questions with 4 options and a {name} slot", async () => {
-    const rows = await as<{ prompt_other: string; options: string[] }>(
+  it("has at least 40 active questions with 4 options (or a map) and a {name} slot", async () => {
+    const rows = await as<{ prompt_other: string; options: string[]; kind: string }>(
       db,
       "anon",
-      "select prompt_other, options from public.questions",
+      "select prompt_other, options, kind from public.questions",
     );
     expect(rows.length).toBeGreaterThanOrEqual(40);
     for (const r of rows) {
-      expect(r.options).toHaveLength(4);
+      expect(r.options).toHaveLength(r.kind === "pin" ? 0 : 4);
       expect(r.prompt_other).toContain("{name}");
     }
   });

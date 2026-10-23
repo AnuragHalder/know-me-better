@@ -4,6 +4,9 @@ import {
   draftFromAi,
   draftFromSaved,
   draftForTopics,
+  makeMapQuestion,
+  mapCount,
+  setPin,
   editItem,
   fillName,
   resetItem,
@@ -284,5 +287,78 @@ describe("topics", () => {
     const swapped = swapQuestion(draft, 0, topical, seeded(5), ["food"]);
     expect(topicOf(swapped[0].questionId)).toBe("food");
     expect(swapped[0].questionId).not.toBe(draft[0].questionId);
+  });
+});
+
+describe("map questions", () => {
+  const withMaps = [
+    ...Array.from({ length: 20 }, (_, i) => ({ id: `c${i}`, topic: i % 2 ? "travel" : "food" })),
+    { id: "map_born", kind: "pin" as const, topic: "life" },
+    { id: "map_dream", kind: "pin" as const, topic: "travel" },
+    { id: "map_college", kind: "pin" as const, topic: "nostalgia" },
+  ];
+
+  it("puts one map question on every new page, at position 4", () => {
+    const draft = startDraft(withMaps, 10, seeded());
+    expect(mapCount(draft, withMaps)).toBe(1);
+    expect(draft[3].questionId).toBe("map_born");
+    const travel = draftForTopics(withMaps, ["travel"], 10, seeded());
+    expect(travel[3].questionId).toBe("map_dream");
+    expect(mapCount(travel, withMaps)).toBe(1);
+  });
+
+  it("swaps a map question for another map question, and others never for a map", () => {
+    const draft = startDraft(withMaps, 10, seeded());
+    const swappedMap = swapQuestion(draft, 3, withMaps, seeded(4));
+    expect(["map_dream", "map_college"]).toContain(swappedMap[3].questionId);
+    for (let seed = 1; seed < 20; seed++) {
+      const swapped = swapQuestion(draft, 0, withMaps, seeded(seed));
+      expect(swapped[0].questionId).toMatch(/^c\d+$/);
+    }
+  });
+
+  it("allows at most two map questions", () => {
+    let draft = startDraft(withMaps, 10, seeded());
+    draft = makeMapQuestion(draft, 0, withMaps, seeded());
+    expect(mapCount(draft, withMaps)).toBe(2);
+    const third = makeMapQuestion(draft, 1, withMaps, seeded());
+    expect(third).toEqual(draft);
+  });
+
+  it("sends a map answer as a place", () => {
+    let draft = startDraft(withMaps, 10, seeded());
+    draft.forEach((_, i) => (draft = setAnswer(draft, i, 2)));
+    draft = setPin(draft, 3, { lat: 22.57, lng: 88.36, label: "Kolkata" });
+    expect(toRpcItems(draft)[3]).toEqual({
+      question_id: "map_born",
+      lat: 22.57,
+      lng: 88.36,
+      label: "Kolkata",
+    });
+  });
+
+  it("restores a saved map answer for editing", () => {
+    const [item] = draftFromSaved(
+      [
+        {
+          question_id: "map_born",
+          prompt: "Where was {name} born?",
+          prompt_self: "Where was I born?",
+          options: [],
+          correct_option: 0,
+          source: "bank",
+          kind: "pin",
+          answer_lat: 22.57,
+          answer_lng: 88.36,
+          answer_label: "Kolkata",
+        },
+      ],
+      new Map(),
+    );
+    expect(item).toMatchObject({
+      questionId: "map_born",
+      answer: 0,
+      pin: { lat: 22.57, lng: 88.36, label: "Kolkata" },
+    });
   });
 });

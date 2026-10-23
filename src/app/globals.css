@@ -30,6 +30,10 @@
   --note-field: #ffffff;
   --tape: rgb(200 210 230 / 0.7);
   --shadow: 0 1px 0 rgb(29 50 112 / 0.06), 0 10px 30px -18px rgb(29 50 112 / 0.35);
+  --sea: #dce8f4;
+  --land: #efece2;
+  --land-hi: #ffffff;
+  --border-map: #9eabc8;
   --hand: "Kalam", "Comic Sans MS", cursive;
   --hand-tracking: normal;
   --note-tilt: -1.5deg;
@@ -60,6 +64,10 @@
     --note: #f2d75a;
     --tape: rgb(255 255 255 / 0.35);
     --shadow: 0 10px 30px -18px rgb(0 0 0 / 0.8);
+    --sea: #111a2c;
+    --land: #1f2434;
+    --land-hi: #2a3046;
+    --border-map: #4c5677;
     color-scheme: dark;
   }
 }
@@ -85,6 +93,10 @@
   --color-on-note-soft: var(--on-note-soft);
   --color-note-field: var(--note-field);
   --color-tape: var(--tape);
+  --color-sea: var(--sea);
+  --color-land: var(--land);
+  --color-land-hi: var(--land-hi);
+  --color-border-map: var(--border-map);
 
   --font-sans: "Figtree Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-hand: var(--hand);
@@ -162,6 +174,10 @@
   --note-field: #ffffff;
   --tape: transparent;
   --shadow: 0 1px 2px rgb(18 19 22 / 0.06), 0 8px 24px -16px rgb(18 19 22 / 0.25);
+  --sea: #e3e8ec;
+  --land: #f1f2ee;
+  --land-hi: #ffffff;
+  --border-map: #b8bdc6;
   --hand: "Figtree Variable", system-ui, sans-serif;
   --hand-tracking: -0.02em;
   --note-tilt: 0deg;
@@ -188,6 +204,10 @@
     --on-note-soft: #2c2f36;
     --note-field: #f6fbe0;
     --shadow: 0 0 0 1px rgb(255 255 255 / 0.05);
+    --sea: #0e1115;
+    --land: #1b1d23;
+    --land-hi: #272a32;
+    --border-map: #41454f;
   }
 }
 

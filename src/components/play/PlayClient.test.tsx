@@ -6,6 +6,17 @@ const refresh = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 vi.mock("@/lib/supabase/browser", () => ({ getBrowserSupabase: () => ({ rpc }) }));
 vi.mock("@/lib/supabase/guest", () => ({ ensureGuestSession: vi.fn().mockResolvedValue({}) }));
+// The real map needs a browser; a button stands in for tapping it.
+vi.mock("@/components/map/MapView", () => ({
+  MapView: ({ onPick, label }: { onPick?: (lat: number, lng: number) => void; label: string }) =>
+    onPick ? (
+      <button type="button" onClick={() => onPick(25.59, 85.14)}>
+        Tap map near Patna
+      </button>
+    ) : (
+      <div aria-label={label} />
+    ),
+}));
 
 import { PlayClient, type PlayQuiz } from "./PlayClient";
 
@@ -140,6 +151,68 @@ describe("PlayClient", () => {
         url="https://x"
       />,
     );
+    expect(screen.queryByText("Think you can do better?")).not.toBeInTheDocument();
+  });
+
+  it("plays a map question: pin, distance, then the spot only if they give up the retry", async () => {
+    const mapQuiz: PlayQuiz = {
+      ...quiz,
+      questions: [
+        { position: 0, prompt: "Where was {name} born?", options: [], kind: "pin", scope: "india" },
+      ],
+    };
+    rpc.mockImplementation(async (fn: string, args: Record<string, unknown>) => {
+      if (fn === "start_attempt") {
+        return { data: { attempt_id: "a1", answered: 0, attempt_no: 1 }, error: null };
+      }
+      if (fn === "answer_pin") {
+        expect(args).toEqual({ p_attempt_id: "a1", p_lat: 25.59, p_lng: 85.14 });
+        return { data: { is_correct: false, distance_km: 468.2, bullseye: false }, error: null };
+      }
+      if (fn === "get_my_map_reveal") return { data: { allowed: false, maps: 1 }, error: null };
+      if (fn === "reveal_my_map") {
+        return {
+          data: {
+            allowed: true,
+            items: [
+              {
+                position: 0,
+                prompt: "Where was {name} born?",
+                scope: "india",
+                label: "Kolkata",
+                lat: 22.57,
+                lng: 88.36,
+                guess_lat: 25.59,
+                guess_lng: 85.14,
+                distance_km: 468.2,
+              },
+            ],
+          },
+          error: null,
+        };
+      }
+      return { data: null, error: null };
+    });
+
+    render(
+      <PlayClient quiz={mapQuiz} start={{ kind: "new", suggestedName: "Meera" }} url="https://x" />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Start the quiz" }));
+    await screen.findByText("Where was Riya born?");
+    expect(screen.getByRole("button", { name: "Lock it in" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Tap map near Patna" }));
+    fireEvent.click(screen.getByRole("button", { name: "Lock it in" }));
+    await screen.findByText("468 km off. Riya's answer is somewhere on that ring.");
+    expect(screen.queryByText(/Kolkata/)).not.toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "See score" }));
+    });
+    await screen.findByRole("button", { name: "Show me the spot (no more retries)" });
+    expect(screen.getByText("Think you can do better?")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show me the spot (no more retries)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Yes, show me" }));
+    await screen.findByText("Kolkata");
     expect(screen.queryByText("Think you can do better?")).not.toBeInTheDocument();
   });
 });

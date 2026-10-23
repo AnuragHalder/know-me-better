@@ -21,6 +21,10 @@ export default function AboutPage() {
         </li>
         <li>Share your link or 6-letter code on WhatsApp, Instagram or anywhere else.</li>
         <li>Friends play without signing up. Each friend gets one try.</li>
+        <li>
+          Map questions: friends drop a pin and score by how close they get. Your pin stays private;
+          places are rounded to about 1 km.
+        </li>
         <li>Scores appear on your leaderboard as friends finish.</li>
       </ul>
       <h2>What&apos;s free and what&apos;s paid</h2>
@@ -28,6 +32,13 @@ export default function AboutPage() {
         Making quizzes and playing them is free. Optional extras, such as revealing which option
         each friend picked or seeing the full leaderboard, are paid. See{" "}
         <Link href="/pricing">Pricing</Link>.
+      </p>
+      <h2>Map data</h2>
+      <p>
+        Maps use <a href="https://www.naturalearthdata.com/">Natural Earth</a> data (public domain),
+        shown with India&apos;s official boundaries. Place names come from{" "}
+        <a href="https://www.geonames.org/">GeoNames</a>, licensed under{" "}
+        <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
       </p>
       <h2>Who runs it</h2>
       <p>
