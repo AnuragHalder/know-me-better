@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import type { AiStatus } from "@/app/create/ai-actions";
 import { saveQuiz } from "@/app/me/actions";
 import { AiWriter } from "@/components/AiWriter";
+import { PinAnswerPicker } from "@/components/map/PinAnswerPicker";
 import { QuestionEditor } from "@/components/QuestionEditor";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
@@ -14,6 +15,10 @@ import {
   draftForTopics,
   draftFromAi,
   editItem,
+  makeMapQuestion,
+  mapCount,
+  MAX_MAPS,
+  setPin,
   fillName,
   resetItem,
   setAnswer,
@@ -74,6 +79,7 @@ export function QuizBuilder({
 
   const byId = new Map(bank.map((q) => [q.id, q]));
   const done = answeredCount(items);
+  const maps = mapCount(items, bank);
   const total = items.length;
   const firstUnanswered = items.findIndex((i) => i.answer === null);
 
@@ -241,7 +247,10 @@ export function QuizBuilder({
             if (!view) return null;
             const heading = view.promptSelf ?? fillName(view.promptOther, shownName);
             const isEditing = editing === item.key;
-            const tag = item.source === "ai" ? "AI" : view.edited ? "Edited" : null;
+            const bankQ = item.questionId ? byId.get(item.questionId) : undefined;
+            const isMap = bankQ?.kind === "pin";
+            const tag = isMap ? "Map" : item.source === "ai" ? "AI" : view.edited ? "Edited" : null;
+            const canAddMap = !isMap && maps < MAX_MAPS;
             return (
               <li
                 key={item.key}
@@ -262,14 +271,30 @@ export function QuizBuilder({
                   </h2>
                   {!isEditing && (
                     <div className="flex shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setEditing(item.key)}
-                        className="min-h-11 px-1.5 text-sm text-ink-soft underline"
-                        aria-label={`Edit question ${index + 1}`}
-                      >
-                        Edit
-                      </button>
+                      {!isMap && (
+                        <button
+                          type="button"
+                          onClick={() => setEditing(item.key)}
+                          className="min-h-11 px-1.5 text-sm text-ink-soft underline"
+                          aria-label={`Edit question ${index + 1}`}
+                        >
+                          Edit
+                        </button>
+                      )}
+                      {canAddMap && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setItems((cur) =>
+                              makeMapQuestion(cur, index, bank, Math.random, topics),
+                            )
+                          }
+                          className="min-h-11 px-1.5 text-sm text-ink-soft underline"
+                          aria-label={`Turn question ${index + 1} into a map question`}
+                        >
+                          Map
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() =>
@@ -283,7 +308,14 @@ export function QuizBuilder({
                     </div>
                   )}
                 </div>
-                {isEditing ? (
+                {isMap ? (
+                  <PinAnswerPicker
+                    id={`pin-${index}`}
+                    scope={bankQ?.map_scope ?? "india"}
+                    value={item.pin}
+                    onChange={(pin) => setItems((cur) => setPin(cur, index, pin))}
+                  />
+                ) : isEditing ? (
                   <QuestionEditor
                     index={index}
                     initial={{

@@ -3,12 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { LiveLeaderboard } from "@/components/LiveLeaderboard";
+import { MapReveal } from "@/components/map/MapReveal";
+import { PinPlay } from "@/components/map/PinPlay";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { ScoreGrid } from "@/components/ui/ScoreGrid";
 import { Sheet } from "@/components/ui/Sheet";
 import { Stamp } from "@/components/ui/Stamp";
 import { StickyNote } from "@/components/ui/StickyNote";
 import { cn } from "@/lib/cn";
+import { formatKm, type MapScope } from "@/lib/map/geo";
 import type { Board } from "@/lib/quiz/board";
 import { MAX_NAME_LENGTH, cleanName, nameProblem } from "@/lib/names";
 import { formatRupees, PRODUCTS } from "@/lib/pricing";
@@ -24,6 +27,9 @@ export interface PlayQuestion {
   /** Friend-facing wording with {name}. Never includes the answer. */
   prompt: string;
   options: string[];
+  /** "pin" = a map question: drop a pin instead of picking an option. */
+  kind?: "choice" | "pin";
+  scope?: MapScope | null;
 }
 
 export interface PlayQuiz {
@@ -54,6 +60,8 @@ export type PlayStart =
 interface Reveal {
   picked: number;
   correct: boolean;
+  /** Map questions: where they pinned and how far off it was. */
+  pin?: { lat: number; lng: number; km: number; bullseye: boolean };
 }
 
 const NAME_KEY = "wkmb:player-name";
@@ -87,6 +95,7 @@ export function PlayClient({
   const [attemptNo, setAttemptNo] = useState(start.kind === "resume" ? start.attemptNo : 1);
   const [results, setResults] = useState<boolean[]>(start.kind === "new" ? [] : start.results);
   const [reveal, setReveal] = useState<Reveal | null>(null);
+  const [pending, setPending] = useState<{ lat: number; lng: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -171,6 +180,7 @@ export function PlayClient({
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
     setReveal(null);
+    setPending(null);
     setResults(nextResults);
     if (nextResults.length >= total) setStage("done");
   }
@@ -198,6 +208,37 @@ export function PlayClient({
     timer.current = setTimeout(() => next(nextResults), ADVANCE_MS);
     // Keep the pending results so "Next" can skip the wait.
     pendingRef.current = nextResults;
+  }
+
+  /** Lock in the dropped pin on a map question. No auto-advance: the ring needs a look. */
+  async function lockPin() {
+    if (busy || reveal || !pending) return;
+    setBusy(true);
+    setError("");
+    const supabase = getBrowserSupabase();
+    const { data, error: rpcError } = supabase
+      ? await supabase.rpc("answer_pin", {
+          p_attempt_id: attemptId,
+          p_lat: pending.lat,
+          p_lng: pending.lng,
+        })
+      : { data: null, error: new Error("not configured") };
+    setBusy(false);
+    if (rpcError || !data) {
+      if (rpcError && /attempt_finished/.test(rpcError.message)) {
+        router.refresh();
+        return;
+      }
+      setError(quizErrorMessage(rpcError?.message));
+      return;
+    }
+    const res = data as { is_correct: boolean; distance_km: number; bullseye: boolean };
+    pendingRef.current = [...results, res.is_correct];
+    setReveal({
+      picked: -1,
+      correct: res.is_correct,
+      pin: { ...pending, km: Number(res.distance_km), bullseye: res.bullseye },
+    });
   }
 
   if (stage === "intro") {
@@ -260,38 +301,67 @@ export function PlayClient({
         <h1 className="font-hand text-3xl leading-tight font-bold" aria-live="polite">
           {fillName(question.prompt, owner)}
         </h1>
-        <div
-          role="group"
-          aria-label="Options"
-          className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-2"
-        >
-          {question.options.map((option, o) => {
-            const isPicked = reveal?.picked === o;
-            const isCorrect = isPicked && reveal?.correct;
-            const isWrongPick = isPicked && !reveal?.correct;
-            return (
-              <button
-                key={`${question.position}-${o}`}
-                type="button"
-                onClick={() => pick(o)}
-                disabled={busy || Boolean(reveal)}
-                aria-pressed={isPicked}
-                className={cn(
-                  "min-h-14 rounded-xl border-2 px-3.5 py-2 text-left text-lg leading-snug font-semibold break-words transition-colors",
-                  !reveal && "border-line bg-sheet text-ink hover:border-ink",
-                  isCorrect && "border-good bg-good-bg text-ink",
-                  isWrongPick && "border-bad bg-bad-bg text-ink",
-                  reveal && !isCorrect && !isWrongPick && "border-line bg-sheet text-ink-soft",
-                  "disabled:cursor-default",
-                )}
-              >
-                {option}
-              </button>
-            );
-          })}
-        </div>
+        {question.kind === "pin" ? (
+          <PinPlay
+            scope={question.scope ?? "india"}
+            pending={pending}
+            reveal={reveal?.pin ?? null}
+            onPick={(lat, lng) => !reveal && setPending({ lat, lng })}
+          />
+        ) : (
+          <div
+            role="group"
+            aria-label="Options"
+            className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-2"
+          >
+            {question.options.map((option, o) => {
+              const isPicked = reveal?.picked === o;
+              const isCorrect = isPicked && reveal?.correct;
+              const isWrongPick = isPicked && !reveal?.correct;
+              return (
+                <button
+                  key={`${question.position}-${o}`}
+                  type="button"
+                  onClick={() => pick(o)}
+                  disabled={busy || Boolean(reveal)}
+                  aria-pressed={isPicked}
+                  className={cn(
+                    "min-h-14 rounded-xl border-2 px-3.5 py-2 text-left text-lg leading-snug font-semibold break-words transition-colors",
+                    !reveal && "border-line bg-sheet text-ink hover:border-ink",
+                    isCorrect && "border-good bg-good-bg text-ink",
+                    isWrongPick && "border-bad bg-bad-bg text-ink",
+                    reveal && !isCorrect && !isWrongPick && "border-line bg-sheet text-ink-soft",
+                    "disabled:cursor-default",
+                  )}
+                >
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+        )}
         <div className="flex min-h-12 items-center justify-between gap-3" aria-live="polite">
-          {reveal ? (
+          {reveal?.pin ? (
+            <>
+              <p className={cn("font-bold", reveal.correct ? "text-good" : "text-bad")}>
+                {reveal.pin.bullseye
+                  ? `Bullseye! ${formatKm(reveal.pin.km)} off.`
+                  : reveal.correct
+                    ? `Close enough: ${formatKm(reveal.pin.km)} off.`
+                    : `${formatKm(reveal.pin.km)} off. ${owner}'s answer is somewhere on that ring.`}
+              </p>
+              <Button size="sm" onClick={() => next(pendingRef.current)}>
+                {index + 1 >= total ? "See score" : "Next"}
+              </Button>
+            </>
+          ) : question.kind === "pin" && !reveal ? (
+            <>
+              <p className="text-sm font-semibold text-bad">{error}</p>
+              <Button onClick={lockPin} disabled={!pending || busy}>
+                {busy ? "Checking…" : "Lock it in"}
+              </Button>
+            </>
+          ) : reveal ? (
             <>
               <p className={cn("font-bold", reveal.correct ? "text-good" : "text-bad")}>
                 {reveal.correct
@@ -354,6 +424,9 @@ function PlayResult({
 }) {
   const score = results.filter(Boolean).length;
   const [board, setBoard] = useState<Board | null>(null);
+  // Choosing to see the map answers gives up the second round.
+  const [revealed, setRevealed] = useState(false);
+  const hasMaps = quiz.questions.some((q) => q.kind === "pin");
   const [note, setNote] = useState("");
   const text = resultText(quiz.ownerName, results, url);
 
@@ -404,13 +477,22 @@ function PlayResult({
         </p>
       </Sheet>
 
-      {(retry === "offer" || retry === "ready") && (
+      {!revealed && (retry === "offer" || retry === "ready") && (
         <SecondChance
           ownerName={quiz.ownerName}
           ready={retry === "ready"}
           onPlayAgain={onPlayAgain}
           busy={busy}
           error={error}
+        />
+      )}
+
+      {hasMaps && (
+        <MapReveal
+          quizId={quiz.id}
+          ownerName={quiz.ownerName}
+          retryReady={retry === "ready"}
+          onRevealed={() => setRevealed(true)}
         />
       )}
 

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { DeleteQuizButton } from "@/components/DeleteQuizButton";
 import { LiveLeaderboard } from "@/components/LiveLeaderboard";
+import { GuessMap, type GuessMapItem } from "@/components/map/GuessMap";
 import { PageShell } from "@/components/PageShell";
 import { ShareBox } from "@/components/ShareBox";
 import { Button, ButtonLink } from "@/components/ui/Button";
@@ -35,20 +36,26 @@ export default async function OwnerQuizPage({
 
   const url = `${await siteOrigin()}${playPath(quiz.code)}`;
 
-  const [{ data: boardData }, { data: statsData }, { data: lockData }] = await Promise.all([
-    supabase.rpc("get_leaderboard", { p_quiz_id: quiz.id }),
-    quiz.play_count > 0
-      ? supabase.rpc("quiz_question_stats", { p_quiz_id: quiz.id })
-      : Promise.resolve({ data: null }),
-    supabase
-      .from("purchases")
-      .select("id")
-      .eq("product", "lock_retries")
-      .eq("quiz_id", quiz.id)
-      .eq("status", "paid")
-      .limit(1)
-      .maybeSingle(),
-  ]);
+  const hasMaps = quiz.questions.some((q) => q.kind === "pin");
+  const [{ data: boardData }, { data: statsData }, { data: lockData }, { data: mapData }] =
+    await Promise.all([
+      supabase.rpc("get_leaderboard", { p_quiz_id: quiz.id }),
+      quiz.play_count > 0
+        ? supabase.rpc("quiz_question_stats", { p_quiz_id: quiz.id })
+        : Promise.resolve({ data: null }),
+      supabase
+        .from("purchases")
+        .select("id")
+        .eq("product", "lock_retries")
+        .eq("quiz_id", quiz.id)
+        .eq("status", "paid")
+        .limit(1)
+        .maybeSingle(),
+      hasMaps
+        ? supabase.rpc("get_guess_map", { p_quiz_id: quiz.id })
+        : Promise.resolve({ data: null }),
+    ]);
+  const guessMaps = (mapData as GuessMapItem[] | null) ?? [];
   const retriesLocked = Boolean(lockData);
   const board = (boardData as Board | null) ?? null;
   const stats = new Map(
@@ -83,6 +90,10 @@ export default async function OwnerQuizPage({
         />
       </Sheet>
 
+      {guessMaps.map((item) => (
+        <GuessMap key={item.position} item={item} ownerName={quiz.owner_name} />
+      ))}
+
       <RetriesCard locked={retriesLocked} />
 
       <Sheet>
@@ -110,7 +121,9 @@ export default async function OwnerQuizPage({
                 <span className="mr-1.5 font-mono">{String(q.position + 1).padStart(2, "0")}</span>
                 {fillName(q.prompt, quiz.owner_name)}
               </span>
-              <span className="font-semibold">{q.options[q.correct_option]}</span>
+              <span className="font-semibold">
+                {q.kind === "pin" ? `📍 ${q.answer_label}` : q.options[q.correct_option]}
+              </span>
               {stats.get(q.position) && (
                 <StatBar stat={stats.get(q.position)!} hardest={hardest?.position === q.position} />
               )}

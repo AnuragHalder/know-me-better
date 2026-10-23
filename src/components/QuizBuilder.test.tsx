@@ -10,6 +10,18 @@ vi.mock("@/app/create/ai-actions", () => ({
   finishAd: vi.fn(),
 }));
 
+vi.mock("@/components/map/PinAnswerPicker", () => ({
+  PinAnswerPicker: ({ id, onChange }: { id: string; onChange: (p: unknown) => void }) => (
+    <button
+      type="button"
+      id={id}
+      onClick={() => onChange({ lat: 22.57, lng: 88.36, label: "Kolkata" })}
+    >
+      Pick Kolkata
+    </button>
+  ),
+}));
+
 import { QuizBuilder } from "./QuizBuilder";
 
 const bank = Array.from({ length: 12 }, (_, i) => ({
@@ -172,5 +184,54 @@ describe("QuizBuilder", () => {
     expect(saveQuiz.mock.calls[0][0].look).toBe("clean");
     fireEvent.click(screen.getByRole("radio", { name: /Slambook/ }));
     expect(document.documentElement.dataset.look).toBe("notebook");
+  });
+
+  it("turns a question into a map question and saves the place", async () => {
+    saveQuiz.mockResolvedValue({ error: "stop" });
+    const withMaps = [
+      ...bank,
+      {
+        id: "map_born",
+        prompt_self: "Where was I born?",
+        prompt_other: "Where was {name} born?",
+        options: [],
+        kind: "pin" as const,
+        map_scope: "india" as const,
+      },
+      {
+        id: "map_dream",
+        prompt_self: "My dream destination",
+        prompt_other: "{name}'s dream destination",
+        options: [],
+        kind: "pin" as const,
+        map_scope: "world" as const,
+      },
+      {
+        id: "map_college",
+        prompt_self: "Where did I go to college?",
+        prompt_other: "Where did {name} go to college?",
+        options: [],
+        kind: "pin" as const,
+        map_scope: "india" as const,
+      },
+    ];
+    render(<QuizBuilder bank={withMaps} initialItems={initialItems} initialName="Riya" />);
+    fireEvent.click(screen.getByRole("button", { name: "Turn question 2 into a map question" }));
+    expect(screen.getAllByText("Map")[0]).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Turn question 3 into a map question" }));
+    // Two is the limit: no more "Map" actions.
+    expect(screen.queryByRole("button", { name: /into a map question/ })).not.toBeInTheDocument();
+
+    for (let i = 0; i < 10; i++) {
+      if (i === 1 || i === 2) continue;
+      fireEvent.click(screen.getByRole("radio", { name: `A${i}` }));
+    }
+    for (const b of screen.getAllByRole("button", { name: "Pick Kolkata" })) fireEvent.click(b);
+    fireEvent.click(screen.getByRole("button", { name: "Save and get my link" }));
+    await screen.findByText("stop");
+    const sent = saveQuiz.mock.calls[0][0].items;
+    expect(sent[1]).toMatchObject({ lat: 22.57, lng: 88.36, label: "Kolkata" });
+    expect(sent[1].question_id).toMatch(/^map_/);
+    expect(sent[1]).not.toHaveProperty("correct_option");
   });
 });

@@ -23,3 +23,11 @@ been tried on the Vercel preview link. The next phase branches from the updated 
 - Correct answers never reach a player's browser before they answer. Scoring happens on the server.
 - Paid unlocks are granted only by the verified Razorpay webhook, never by the browser.
 - Schema changes go in a new migration file. Old migrations are never edited.
+
+## Map questions
+
+Questions can be map questions ("Where was I born?", "My dream destination", …): the creator
+answers with a place, friends drop a pin and score by distance. Map data is built by
+`scripts/build-map-data.mjs` into `public/maps/` (Natural Earth with India's official
+boundaries; GeoNames place names, CC BY 4.0, credited on the About page). Later: multi-stop
+"journey", "long-distance bestie", a daily map game.
