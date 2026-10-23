@@ -83,7 +83,7 @@ describe("PlayClient", () => {
     });
 
     await screen.findByText(/#1/);
-    expect(screen.getByText("Good friend")).toBeInTheDocument();
+    expect(screen.getByText("Paying attention")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Try again for ₹9" })).toBeDisabled();
     expect(screen.getByRole("link", { name: "Share on WhatsApp" }).getAttribute("href")).toContain(
       encodeURIComponent("I got 1/2 on Riya's quiz"),
@@ -99,7 +99,7 @@ describe("PlayClient", () => {
         url="https://x/play/ABCDEF"
       />,
     );
-    expect(screen.getByText("Soulmate level")).toBeInTheDocument();
+    expect(screen.getByText("Diary-level access")).toBeInTheDocument();
     expect(screen.getByText("Meera, you know Riya")).toBeInTheDocument();
   });
 

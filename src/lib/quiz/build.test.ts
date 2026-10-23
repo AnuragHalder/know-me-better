@@ -3,6 +3,7 @@ import {
   answeredCount,
   draftFromAi,
   draftFromSaved,
+  draftForTopics,
   editItem,
   fillName,
   resetItem,
@@ -239,5 +240,49 @@ describe("draftFromSaved", () => {
       [null, 0, "ai", true],
       [null, 3, "custom", true],
     ]);
+  });
+});
+
+describe("topics", () => {
+  const topical = Array.from({ length: 40 }, (_, i) => ({
+    id: `t${i}`,
+    topic: ["movies", "money", "food", "tech"][i % 4],
+  }));
+  const topicOf = (id: string | null) => topical.find((q) => q.id === id)?.topic;
+
+  it("fills the page from one topic", () => {
+    const draft = draftForTopics(topical, ["movies"], 10, seeded());
+    expect(draft).toHaveLength(10);
+    expect(draft.every((d) => topicOf(d.questionId) === "movies")).toBe(true);
+    expect(new Set(draft.map((d) => d.questionId)).size).toBe(10);
+  });
+
+  it("mixes two topics evenly", () => {
+    const draft = draftForTopics(topical, ["movies", "money"], 10, seeded());
+    const movies = draft.filter((d) => topicOf(d.questionId) === "movies").length;
+    expect(movies).toBe(5);
+  });
+
+  it("tops up from other topics when a topic runs short", () => {
+    const small = [
+      ...topical.slice(0, 8),
+      { id: "x1", topic: "rare" },
+      { id: "x2", topic: "rare" },
+    ];
+    const draft = draftForTopics(small, ["rare"], 10, seeded());
+    expect(
+      draft
+        .slice(0, 2)
+        .map((d) => d.questionId)
+        .sort(),
+    ).toEqual(["x1", "x2"]);
+    expect(draft).toHaveLength(10);
+  });
+
+  it("swaps within the chosen topics while any are left", () => {
+    const draft = draftForTopics(topical, ["food"], 9, seeded());
+    const swapped = swapQuestion(draft, 0, topical, seeded(5), ["food"]);
+    expect(topicOf(swapped[0].questionId)).toBe("food");
+    expect(swapped[0].questionId).not.toBe(draft[0].questionId);
   });
 });

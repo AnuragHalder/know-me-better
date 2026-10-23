@@ -55,7 +55,7 @@ export default async function MePage({
         {quizzes.length === 0 ? (
           <>
             <p className="text-ink-soft">
-              Fill in your slam-book page: 10 questions about you. Then send the link and see which
+              Pick a few topics and answer 10 questions about you. Then send the link and see which
               friend knows you best.
             </p>
             <div>

@@ -7,7 +7,7 @@ import type { BankQuestion } from "./build";
 export async function loadBank(supabase: SupabaseClient): Promise<BankQuestion[]> {
   const { data, error } = await supabase
     .from("questions")
-    .select("id, prompt_self, prompt_other, options")
+    .select("id, prompt_self, prompt_other, options, topic")
     .eq("active", true)
     .order("sort");
   if (error) throw new Error(`Could not load questions: ${error.message}`);

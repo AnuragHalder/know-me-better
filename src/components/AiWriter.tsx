@@ -9,6 +9,8 @@ import { TOPICS_MAX, topicsProblem, type GeneratedQuestion } from "@/lib/ai/ques
 
 interface AiWriterProps {
   status: AiStatus | null;
+  /** Labels of the topic chips the creator picked, used when the box is empty. */
+  topicsHint?: string;
   onQuestions: (questions: GeneratedQuestion[]) => void;
 }
 
@@ -16,7 +18,7 @@ interface AiWriterProps {
  * "Write my questions with AI": Pro members generate straight away; everyone else
  * watches a short ad for each set. The server decides; this only shows the state.
  */
-export function AiWriter({ status: initial, onQuestions }: AiWriterProps) {
+export function AiWriter({ status: initial, topicsHint = "", onQuestions }: AiWriterProps) {
   const [status, setStatus] = useState(initial);
   const [topics, setTopics] = useState("");
   const [message, setMessage] = useState("");
@@ -28,7 +30,8 @@ export function AiWriter({ status: initial, onQuestions }: AiWriterProps) {
   const unlocked = status.pro || status.credits > 0;
 
   async function generate() {
-    const problem = topicsProblem(topics);
+    const subject = topics.trim() || topicsHint;
+    const problem = topicsProblem(subject);
     if (problem) {
       setMessage(problem);
       return;
@@ -36,7 +39,7 @@ export function AiWriter({ status: initial, onQuestions }: AiWriterProps) {
     setBusy(true);
     setMessage(unlocked ? "Writing your questions…" : "");
     try {
-      const res = await generateAiQuestions(topics);
+      const res = await generateAiQuestions(subject);
       if (res.status) setStatus(res.status);
       if (res.ok) {
         onQuestions(res.questions);
@@ -100,7 +103,11 @@ export function AiWriter({ status: initial, onQuestions }: AiWriterProps) {
         maxLength={TOPICS_MAX}
         value={topics}
         onChange={(e) => setTopics(e.target.value)}
-        placeholder="e.g. cricket, street food, 90s Bollywood, my college days"
+        placeholder={
+          topicsHint
+            ? `${topicsHint} (or type your own)`
+            : "e.g. cricket, street food, 90s Bollywood, my college days"
+        }
         className="w-full resize-none rounded-lg border-2 border-on-note/30 bg-note-field px-3 py-2 text-base text-on-note placeholder:text-on-note-soft"
       />
       <div className="flex flex-wrap items-center justify-between gap-2">

@@ -6,9 +6,9 @@ export function verdict(score: number, total: number = QUESTIONS_PER_QUIZ): stri
     throw new RangeError("score and total must be finite and total must be positive");
   }
   const ratio = Math.min(Math.max(score, 0), total) / total;
-  if (ratio === 1) return "Soulmate level";
-  if (ratio >= 0.8) return "Best friend";
-  if (ratio >= 0.5) return "Good friend";
-  if (ratio >= 0.3) return "Acquaintance";
-  return "Who are you?";
+  if (ratio === 1) return "Diary-level access";
+  if (ratio >= 0.8) return "Scary accurate";
+  if (ratio >= 0.5) return "Paying attention";
+  if (ratio >= 0.3) return "Vaguely familiar";
+  return "Total stranger";
 }
