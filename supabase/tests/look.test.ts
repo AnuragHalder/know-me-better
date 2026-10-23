@@ -22,21 +22,21 @@ async function newQuiz(owner: TestUser) {
 }
 
 describe("quiz look", () => {
-  it("starts as the notebook, and the owner can switch it", async () => {
+  it("starts clean, and the owner can switch it", async () => {
     const owner = await createUser(db);
     const quiz = await newQuiz(owner);
     const friend = await createUser(db, { anonymous: true });
     expect((await rpc<{ look: string }>(db, friend, "get_quiz_for_play", [quiz.code])).look).toBe(
-      "notebook",
+      "clean",
     );
-    await rpc(db, owner, "set_quiz_look", [quiz.id, "clean"]);
+    await rpc(db, owner, "set_quiz_look", [quiz.id, "notebook"]);
     const after = await rpc<{ look: string; retries_locked: boolean }>(
       db,
       friend,
       "get_quiz_for_play",
       [quiz.code],
     );
-    expect(after).toMatchObject({ look: "clean", retries_locked: false });
+    expect(after).toMatchObject({ look: "notebook", retries_locked: false });
   });
 
   it("only the owner can change it, and only to a known look", async () => {

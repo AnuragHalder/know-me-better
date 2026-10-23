@@ -1,8 +1,10 @@
--- Each quiz has a look the creator picks: the original notebook page, or a clean,
--- modern one. Friends see the creator's choice when they play.
+-- Each quiz has a look the creator picks: the clean, modern default, or the
+-- original notebook ("Slambook") page. Friends see the creator's choice when they
+-- play, unless they picked their own look in the header. Existing quizzes move to
+-- the clean default too.
 
 alter table public.quizzes
-  add column look text not null default 'notebook' check (look in ('notebook', 'clean'));
+  add column look text not null default 'clean' check (look in ('notebook', 'clean'));
 
 -- The owner changes the look at any time; it never affects scores.
 create function public.set_quiz_look(p_quiz_id uuid, p_look text)

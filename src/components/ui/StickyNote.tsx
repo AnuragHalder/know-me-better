@@ -14,7 +14,7 @@ export function StickyNote({
   return (
     <div
       className={cn(
-        "note relative mt-3 flex rotate-(--note-tilt) flex-col gap-2.5 rounded-[3px] bg-note px-4 pt-6 pb-4 text-on-note",
+        "relative mt-3 flex rotate-(--note-tilt) flex-col gap-2.5 rounded-(--note-radius) bg-note px-4 pt-6 pb-4 text-on-note",
         "shadow-[0_10px_18px_-10px_rgb(0_0_0/0.5)]",
         className,
       )}

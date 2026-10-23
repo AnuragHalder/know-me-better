@@ -6,7 +6,9 @@
  * Components use the Tailwind names below (bg-paper, text-ink, font-hand ...),
  * never raw hex values, so light and dark stay in sync.
  */
-:root {
+/* Slambook ("notebook") look. Also the fallback for anything the clean look doesn't set. */
+:root,
+[data-look="notebook"] {
   --paper: #fbfaf6;
   --sheet: #ffffff;
   --rule: #d6e2f3;
@@ -29,12 +31,17 @@
   --tape: rgb(200 210 230 / 0.7);
   --shadow: 0 1px 0 rgb(29 50 112 / 0.06), 0 10px 30px -18px rgb(29 50 112 / 0.35);
   --hand: "Kalam", "Comic Sans MS", cursive;
-  --hand-weight: 700;
+  --hand-tracking: normal;
   --note-tilt: -1.5deg;
+  --note-radius: 3px;
+  --sheet-radius: 0.375rem;
+  --ruled-pad: 3rem;
+  --notebook-vis: visible;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root,
+  [data-look="notebook"] {
     --paper: #11131c;
     --sheet: #181b27;
     --rule: #252b3f;
@@ -131,9 +138,11 @@
 }
 
 /*
- * The "clean" look a creator can pick for their quiz: modern type, no ruled
- * paper, near-black ink and a lime accent. Same token names, so every component
- * follows. Set with data-look="clean" on <html> or on a page wrapper.
+ * The "clean" look, the default: modern type, no ruled paper, near-black ink and
+ * a lime accent. Same token names, so every component follows. Set with
+ * data-look on <html> (the visitor's choice) or on a page wrapper (a quiz's look).
+ * Decorations read variables (--sheet-radius, --notebook-vis, …) rather than
+ * descendant selectors, so the nearest data-look always wins.
  */
 [data-look="clean"] {
   --paper: #f3f3f1;
@@ -154,10 +163,12 @@
   --tape: transparent;
   --shadow: 0 1px 2px rgb(18 19 22 / 0.06), 0 8px 24px -16px rgb(18 19 22 / 0.25);
   --hand: "Figtree Variable", system-ui, sans-serif;
-  --hand-weight: 800;
+  --hand-tracking: -0.02em;
   --note-tilt: 0deg;
-  background: var(--paper);
-  color: var(--ink);
+  --note-radius: 1.25rem;
+  --sheet-radius: 1.25rem;
+  --ruled-pad: 1.25rem;
+  --notebook-vis: hidden;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -180,22 +191,15 @@
   }
 }
 
-/* Unlayered, so they win over Tailwind utilities on the same elements. */
-[data-look="clean"] .sheet {
-  border-radius: 1.25rem;
+/* A look set on a page wrapper paints its own background. */
+[data-look] {
+  background: var(--paper);
+  color: var(--ink);
 }
-[data-look="clean"] .note {
-  border-radius: 1.25rem;
-}
-[data-look="clean"] .ruled {
-  padding-left: 1.25rem;
-}
-[data-look="clean"] .notebook-only {
-  display: none;
-}
-[data-look="clean"] .font-hand {
-  font-weight: var(--hand-weight);
-  letter-spacing: -0.02em;
+
+/* Unlayered, so it applies to every handwritten heading. */
+.font-hand {
+  letter-spacing: var(--hand-tracking);
 }
 
 html {

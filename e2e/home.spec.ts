@@ -15,3 +15,19 @@ test("page never scrolls sideways", async ({ page }) => {
   );
   expect(overflow).toBeLessThanOrEqual(0);
 });
+
+test("the site is clean by default and the header switch remembers Slambook", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("data-look", "clean");
+  await page.getByRole("button", { name: "Slambook look" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-look", "notebook");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-look", "notebook");
+  await expect(page.getByRole("button", { name: "Slambook look" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await page.getByRole("button", { name: "Clean look" }).click();
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-look", "clean");
+});

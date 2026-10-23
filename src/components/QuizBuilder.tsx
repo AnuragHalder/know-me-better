@@ -4,7 +4,6 @@ import { useEffect, useState, useTransition } from "react";
 import type { AiStatus } from "@/app/create/ai-actions";
 import { saveQuiz } from "@/app/me/actions";
 import { AiWriter } from "@/components/AiWriter";
-import type { Look } from "@/components/PageShell";
 import { QuestionEditor } from "@/components/QuestionEditor";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
@@ -24,6 +23,7 @@ import {
   type BankQuestion,
   type DraftItem,
 } from "@/lib/quiz/build";
+import { LOOK_LABEL, type Look } from "@/lib/look";
 import { TOPICS, topicLabels } from "@/lib/quiz/topics";
 
 const MAX_TOPICS = 3;
@@ -40,8 +40,8 @@ interface QuizBuilderProps {
 }
 
 const LOOKS: { id: Look; label: string; hint: string }[] = [
-  { id: "notebook", label: "Notebook", hint: "Handwritten, lined paper" },
-  { id: "clean", label: "Clean", hint: "Modern, minimal" },
+  { id: "clean", label: LOOK_LABEL.clean, hint: "Modern, minimal" },
+  { id: "notebook", label: LOOK_LABEL.notebook, hint: "Handwritten, lined paper" },
 ];
 
 export function QuizBuilder({
@@ -50,16 +50,17 @@ export function QuizBuilder({
   initialName,
   quizId,
   aiStatus = null,
-  initialLook = "notebook",
+  initialLook = "clean",
 }: QuizBuilderProps) {
   const [look, setLook] = useState<Look>(initialLook);
   // Preview the look on the whole page while building.
   useEffect(() => {
     const root = document.documentElement;
-    if (look === "clean") root.dataset.look = "clean";
-    else delete root.dataset.look;
+    const before = root.dataset.look;
+    root.dataset.look = look;
     return () => {
-      delete root.dataset.look;
+      if (before) root.dataset.look = before;
+      else delete root.dataset.look;
     };
   }, [look]);
   const [name, setName] = useState(initialName);

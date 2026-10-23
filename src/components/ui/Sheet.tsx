@@ -11,8 +11,8 @@ export function Sheet({ ruled = false, className, children, ...props }: SheetPro
   return (
     <section
       className={cn(
-        "sheet relative rounded-md bg-sheet shadow-sheet",
-        ruled ? "ruled py-6 pr-5 pl-12" : "p-5",
+        "relative rounded-(--sheet-radius) bg-sheet shadow-sheet",
+        ruled ? "ruled py-6 pr-5 pl-(--ruled-pad)" : "p-5",
         className,
       )}
       {...props}
@@ -21,11 +21,11 @@ export function Sheet({ ruled = false, className, children, ...props }: SheetPro
         <>
           <span
             aria-hidden="true"
-            className="notebook-only absolute inset-y-0 left-[30px] w-0.5 bg-margin"
+            className="absolute inset-y-0 [visibility:var(--notebook-vis)] left-[30px] w-0.5 bg-margin"
           />
           <span
             aria-hidden="true"
-            className="notebook-only absolute top-6 left-2 flex flex-col gap-14"
+            className="absolute top-6 [visibility:var(--notebook-vis)] left-2 flex flex-col gap-14"
           >
             {[0, 1, 2].map((i) => (
               <i
