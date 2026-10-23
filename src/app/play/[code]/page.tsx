@@ -24,6 +24,7 @@ const loadQuiz = cache(async (raw: string): Promise<PlayQuiz | null> => {
     id: string;
     code: string;
     owner_name: string;
+    look?: string;
     retries_locked?: boolean;
     questions: PlayQuiz["questions"] | null;
   } | null;
@@ -33,6 +34,7 @@ const loadQuiz = cache(async (raw: string): Promise<PlayQuiz | null> => {
     code: q.code,
     ownerName: q.owner_name,
     retriesLocked: Boolean(q.retries_locked),
+    look: q.look === "clean" ? "clean" : "notebook",
     questions: q.questions,
   };
 });
@@ -98,7 +100,7 @@ export default async function PlayPage({ params }: Params) {
 
     if (own) {
       return (
-        <PageShell>
+        <PageShell look={quiz.look}>
           <Sheet ruled>
             <span className="text-xs font-bold tracking-widest text-ink-soft uppercase">
               Code {quiz.code}
@@ -155,7 +157,7 @@ export default async function PlayPage({ params }: Params) {
   const url = `${await siteOrigin()}${playPath(quiz.code)}`;
 
   return (
-    <PageShell>
+    <PageShell look={quiz.look}>
       <PlayClient key={start.kind} quiz={quiz} start={start} url={url} />
     </PageShell>
   );

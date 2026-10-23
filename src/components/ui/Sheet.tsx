@@ -11,7 +11,7 @@ export function Sheet({ ruled = false, className, children, ...props }: SheetPro
   return (
     <section
       className={cn(
-        "relative rounded-md bg-sheet shadow-sheet",
+        "sheet relative rounded-md bg-sheet shadow-sheet",
         ruled ? "ruled py-6 pr-5 pl-12" : "p-5",
         className,
       )}
@@ -19,8 +19,14 @@ export function Sheet({ ruled = false, className, children, ...props }: SheetPro
     >
       {ruled && (
         <>
-          <span aria-hidden="true" className="absolute inset-y-0 left-[30px] w-0.5 bg-margin" />
-          <span aria-hidden="true" className="absolute top-6 left-2 flex flex-col gap-14">
+          <span
+            aria-hidden="true"
+            className="notebook-only absolute inset-y-0 left-[30px] w-0.5 bg-margin"
+          />
+          <span
+            aria-hidden="true"
+            className="notebook-only absolute top-6 left-2 flex flex-col gap-14"
+          >
             {[0, 1, 2].map((i) => (
               <i
                 key={i}

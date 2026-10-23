@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import type { AiStatus } from "@/app/create/ai-actions";
 import { saveQuiz } from "@/app/me/actions";
 import { AiWriter } from "@/components/AiWriter";
+import type { Look } from "@/components/PageShell";
 import { QuestionEditor } from "@/components/QuestionEditor";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
@@ -35,7 +36,13 @@ interface QuizBuilderProps {
   quizId?: string;
   /** AI writing status; null hides the AI note (not signed in, or not set up). */
   aiStatus?: AiStatus | null;
+  initialLook?: Look;
 }
+
+const LOOKS: { id: Look; label: string; hint: string }[] = [
+  { id: "notebook", label: "Notebook", hint: "Handwritten, lined paper" },
+  { id: "clean", label: "Clean", hint: "Modern, minimal" },
+];
 
 export function QuizBuilder({
   bank,
@@ -43,7 +50,18 @@ export function QuizBuilder({
   initialName,
   quizId,
   aiStatus = null,
+  initialLook = "notebook",
 }: QuizBuilderProps) {
+  const [look, setLook] = useState<Look>(initialLook);
+  // Preview the look on the whole page while building.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (look === "clean") root.dataset.look = "clean";
+    else delete root.dataset.look;
+    return () => {
+      delete root.dataset.look;
+    };
+  }, [look]);
   const [name, setName] = useState(initialName);
   const [items, setItems] = useState(initialItems);
   const [editing, setEditing] = useState<string | null>(null);
@@ -95,7 +113,7 @@ export function QuizBuilder({
     }
     setError("");
     startTransition(async () => {
-      const res = await saveQuiz({ quizId, ownerName: name, items: toRpcItems(items) });
+      const res = await saveQuiz({ quizId, ownerName: name, items: toRpcItems(items), look });
       // Only failures return; success redirects.
       if (res?.error) setError(res.error);
     });
@@ -128,6 +146,33 @@ export function QuizBuilder({
             className="min-h-12 rounded-xl border-2 border-line bg-sheet px-3.5 text-base text-ink placeholder:text-ink-soft/70"
           />
         </div>
+        <fieldset className="flex flex-col gap-1.5">
+          <legend className="mb-1.5 text-xs font-bold tracking-widest text-ink-soft uppercase">
+            Look friends will see
+          </legend>
+          <div className="grid grid-cols-2 gap-2">
+            {LOOKS.map((l) => (
+              <label
+                key={l.id}
+                className={cn(
+                  "flex min-h-14 cursor-pointer flex-col justify-center rounded-xl border-2 px-3 py-2",
+                  look === l.id ? "border-ink bg-hi text-on-hi" : "border-line bg-sheet text-ink",
+                )}
+              >
+                <input
+                  type="radio"
+                  name="look"
+                  value={l.id}
+                  checked={look === l.id}
+                  onChange={() => setLook(l.id)}
+                  className="sr-only"
+                />
+                <span className="font-bold">{l.label}</span>
+                <span className="text-xs opacity-80">{l.hint}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
       </Sheet>
 
       <Sheet>

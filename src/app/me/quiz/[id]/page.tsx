@@ -61,7 +61,7 @@ export default async function OwnerQuizPage({
   const locked = quiz.play_count > 0;
 
   return (
-    <PageShell>
+    <PageShell look={quiz.look}>
       <Sheet ruled>
         <span className="text-xs font-bold tracking-widest text-ink-soft uppercase">
           {isNew ? "Your page is ready" : saved ? "Changes saved" : `${quiz.owner_name}'s page`}
