@@ -7,6 +7,8 @@ export interface BankQuestion {
   /** Friend-facing wording with a {name} placeholder. */
   prompt_other: string;
   options: string[];
+  /** Topic id from TOPICS, or null for untagged questions. */
+  topic?: string | null;
 }
 
 /** Wording the creator wrote or changed. `promptOther` keeps the {name} placeholder. */
@@ -74,19 +76,57 @@ export function startDraft(
 }
 
 /** Random bank questions not already on the page. */
-function unusedBank(items: readonly DraftItem[], bank: readonly { id: string }[]) {
+function unusedBank<Q extends { id: string }>(items: readonly DraftItem[], bank: readonly Q[]) {
   const used = new Set(items.map((i) => i.questionId).filter(Boolean));
   return bank.filter((q) => !used.has(q.id));
+}
+
+type TopicQuestion = { id: string; topic?: string | null };
+
+/**
+ * A fresh page from the chosen topics, mixed evenly: questions are taken in turns
+ * from each topic, so "Movies + Money" gives about five of each. Topped up from
+ * other topics if the chosen ones run short. No topics = a random mix.
+ */
+export function draftForTopics(
+  bank: readonly TopicQuestion[],
+  topics: readonly string[],
+  count = QUESTIONS_PER_QUIZ,
+  rng: Rng = Math.random,
+): DraftItem[] {
+  if (topics.length === 0) return startDraft(bank, count, rng);
+  const piles = topics.map((t) =>
+    shuffle(
+      bank.filter((q) => q.topic === t),
+      rng,
+    ),
+  );
+  const picked: TopicQuestion[] = [];
+  for (let round = 0; picked.length < count && piles.some((p) => p.length > round); round++) {
+    for (const pile of shuffle(piles, rng)) {
+      if (picked.length < count && pile[round]) picked.push(pile[round]);
+    }
+  }
+  const chosen = new Set(picked.map((q) => q.id));
+  const rest = shuffle(
+    bank.filter((q) => !chosen.has(q.id)),
+    rng,
+  ).slice(0, count - picked.length);
+  return [...picked, ...rest].map((q) => bankItem(q.id));
 }
 
 /** Replace one question with a random bank one not already on the page. */
 export function swapQuestion(
   items: readonly DraftItem[],
   index: number,
-  bank: readonly { id: string }[],
+  bank: readonly TopicQuestion[],
   rng: Rng = Math.random,
+  /** Prefer questions from these topics when any are left. */
+  topics: readonly string[] = [],
 ): DraftItem[] {
-  const pool = unusedBank(items, bank);
+  const unused = unusedBank(items, bank);
+  const onTopic = unused.filter((q) => q.topic && topics.includes(q.topic));
+  const pool = onTopic.length > 0 ? onTopic : unused;
   if (pool.length === 0 || index < 0 || index >= items.length) return [...items];
   const pick = pool[Math.floor(rng() * pool.length)];
   return items.map((item, i) => (i === index ? bankItem(pick.id) : item));

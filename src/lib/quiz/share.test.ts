@@ -21,7 +21,7 @@ describe("resultText", () => {
   it("shows score, verdict, grid and link", () => {
     const r = [true, true, false, true, true, true, true, true, false, true];
     expect(resultText("Riya", r, "https://x.in/play/ABCDEF")).toBe(
-      "I got 8/10 on Riya's quiz: Best friend\n🟩🟩🟥🟩🟩🟩🟩🟩🟥🟩\nHow well do you know Riya? https://x.in/play/ABCDEF",
+      "I got 8/10 on Riya's quiz: Scary accurate\n🟩🟩🟥🟩🟩🟩🟩🟩🟥🟩\nHow well do you know Riya? https://x.in/play/ABCDEF",
     );
   });
 });

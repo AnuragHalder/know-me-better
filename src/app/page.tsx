@@ -12,7 +12,7 @@ const EXAMPLE_ROWS: LeaderboardRow[] = [
 ];
 
 const STEPS = [
-  "Pick your answers to 10 slam-book questions.",
+  "Pick topics you're into and answer 10 questions about you.",
   "Share your link or 6-letter code.",
   "Friends guess. The leaderboard updates live.",
 ];
@@ -22,13 +22,15 @@ export default function Home() {
     <PageShell>
       <Sheet ruled>
         <span className="text-xs font-bold tracking-widest text-ink-soft uppercase">
-          The friendship slam book
+          The friendship quiz
         </span>
         <h1 className="font-hand text-[clamp(2rem,7vw,2.6rem)] leading-tight font-bold">
-          Fill in your page. See which friend <span className="highlight">really</span> knows you.
+          Ten questions about you. Find out which friend <span className="highlight">actually</span>{" "}
+          knows you.
         </h1>
         <p className="max-w-[42ch] text-lg text-ink-soft">
-          Answer 10 questions about yourself, send the link, and watch the scores come in.
+          Hot takes, money habits, travel style, music. Pick the topics, send the link, and watch
+          your friends get ranked.
         </p>
         <div className="flex flex-wrap items-center gap-2.5">
           <ButtonLink href="/create" variant="pink">

@@ -11,6 +11,7 @@ import { cn } from "@/lib/cn";
 import { MAX_NAME_LENGTH, nameProblem } from "@/lib/names";
 import {
   answeredCount,
+  draftForTopics,
   draftFromAi,
   editItem,
   fillName,
@@ -22,6 +23,9 @@ import {
   type BankQuestion,
   type DraftItem,
 } from "@/lib/quiz/build";
+import { TOPICS, topicLabels } from "@/lib/quiz/topics";
+
+const MAX_TOPICS = 3;
 
 interface QuizBuilderProps {
   bank: BankQuestion[];
@@ -43,7 +47,8 @@ export function QuizBuilder({
   const [name, setName] = useState(initialName);
   const [items, setItems] = useState(initialItems);
   const [editing, setEditing] = useState<string | null>(null);
-  const [beforeAi, setBeforeAi] = useState<DraftItem[] | null>(null);
+  const [topics, setTopics] = useState<string[]>([]);
+  const [undo, setUndo] = useState<{ items: DraftItem[]; message: string } | null>(null);
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
   const shownName = name.trim() || "you";
@@ -52,6 +57,24 @@ export function QuizBuilder({
   const done = answeredCount(items);
   const total = items.length;
   const firstUnanswered = items.findIndex((i) => i.answer === null);
+
+  function replacePage(next: DraftItem[], message: string) {
+    setUndo({ items, message });
+    setEditing(null);
+    setItems(next);
+  }
+
+  function toggleTopic(id: string) {
+    const next = topics.includes(id)
+      ? topics.filter((t) => t !== id)
+      : [...topics, id].slice(-MAX_TOPICS);
+    setTopics(next);
+    const labels = topicLabels(next);
+    replacePage(
+      draftForTopics(bank, next),
+      labels.length ? `New questions on ${labels.join(", ")}.` : "A fresh random mix.",
+    );
+  }
 
   function save() {
     const problem = nameProblem(name);
@@ -107,28 +130,58 @@ export function QuizBuilder({
         </div>
       </Sheet>
 
+      <Sheet>
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="font-bold">Quiz your friends on…</h2>
+          <span className="text-xs text-ink-soft">Pick up to {MAX_TOPICS}</span>
+        </div>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Topics">
+          {TOPICS.map((t) => {
+            const on = topics.includes(t.id);
+            return (
+              <button
+                key={t.id}
+                type="button"
+                aria-pressed={on}
+                onClick={() => toggleTopic(t.id)}
+                className={cn(
+                  "min-h-10 rounded-full border-2 px-3 text-sm font-semibold transition-colors",
+                  on
+                    ? "border-ink bg-ink text-sheet"
+                    : "border-line bg-sheet text-ink hover:border-ink-soft",
+                )}
+              >
+                <span aria-hidden="true" className="mr-1">
+                  {t.emoji}
+                </span>
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+      </Sheet>
+
       {aiStatus && (
         <AiWriter
           status={aiStatus}
+          topicsHint={topicLabels(topics).join(", ")}
           onQuestions={(generated) => {
-            setBeforeAi(items);
-            setEditing(null);
-            setItems(draftFromAi(generated, bank));
+            replacePage(draftFromAi(generated, bank), "AI questions are on your page.");
             document.getElementById("q-0")?.scrollIntoView({ block: "start", behavior: "smooth" });
           }}
         />
       )}
 
       <Sheet>
-        {beforeAi && (
+        {undo && (
           <div className="flex items-center justify-between gap-3 rounded-xl bg-hi px-3 py-1 text-sm text-on-hi">
-            <span>AI questions are on your page.</span>
+            <span>{undo.message}</span>
             <button
               type="button"
-              className="min-h-11 font-bold underline"
+              className="min-h-11 shrink-0 font-bold underline"
               onClick={() => {
-                setItems(beforeAi);
-                setBeforeAi(null);
+                setItems(undo.items);
+                setUndo(null);
                 setEditing(null);
               }}
             >
@@ -173,7 +226,9 @@ export function QuizBuilder({
                       </button>
                       <button
                         type="button"
-                        onClick={() => setItems((cur) => swapQuestion(cur, index, bank))}
+                        onClick={() =>
+                          setItems((cur) => swapQuestion(cur, index, bank, Math.random, topics))
+                        }
                         className="min-h-11 px-1.5 text-sm text-ink-soft underline"
                         aria-label={`Swap question ${index + 1} for a different one`}
                       >

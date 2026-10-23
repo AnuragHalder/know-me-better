@@ -16,6 +16,7 @@ const bank = Array.from({ length: 12 }, (_, i) => ({
   id: `q${i}`,
   prompt_self: `Question ${i}?`,
   prompt_other: `{name}'s question ${i}?`,
+  topic: i % 2 ? "money" : "food",
   options: ["A", "B", "C", "D"].map((l) => `${l}${i}`),
 }));
 const initialItems = bank.slice(0, 10).map((q) => ({ key: q.id, questionId: q.id, answer: null }));
@@ -132,5 +133,28 @@ describe("QuizBuilder", () => {
     expect(screen.getAllByText("AI")).toHaveLength(10);
     fireEvent.click(screen.getByRole("button", { name: "Undo" }));
     expect(screen.getByText("Question 0?")).toBeInTheDocument();
+  });
+
+  it("fills the page from a topic chip, and can undo", () => {
+    const big = Array.from({ length: 24 }, (_, i) => ({
+      id: `b${i}`,
+      prompt_self: `${i < 12 ? "Money" : "Food"} question ${i}?`,
+      prompt_other: `{name}'s q ${i}?`,
+      options: ["A", "B", "C", "D"].map((l) => `${l}-${i}`),
+      topic: i < 12 ? "money" : "food",
+    }));
+    render(
+      <QuizBuilder
+        bank={big}
+        initialItems={big.slice(12, 22).map((q) => ({ key: q.id, questionId: q.id, answer: null }))}
+        initialName="Riya"
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Money/ }));
+    expect(screen.getByRole("button", { name: /Money/ })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getAllByText(/^Money question/)).toHaveLength(10);
+    expect(screen.getByText("New questions on Money.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Undo" }));
+    expect(screen.getAllByText(/^Food question/)).toHaveLength(10);
   });
 });
