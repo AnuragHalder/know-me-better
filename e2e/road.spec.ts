@@ -1,8 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-test("the home page leads to story mode", async ({ page }) => {
+test("the home page offers quiz and story side by side at the top", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("link", { name: "Walk a story" }).click();
+  const modes = page.getByRole("list", { name: "Ways to play" });
+  await expect(modes.getByRole("link")).toHaveCount(2);
+  await expect(modes.getByRole("link", { name: /Walk a story/ })).toBeInViewport();
+  await page.getByRole("link", { name: /Walk a story/ }).click();
   await expect(page).toHaveURL(/\/road$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Walk your road");
   await expect(page.getByText("Every story is free for now.")).toBeVisible();

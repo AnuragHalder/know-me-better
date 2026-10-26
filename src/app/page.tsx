@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { Leaderboard, type LeaderboardRow } from "@/components/Leaderboard";
 import { PageShell } from "@/components/PageShell";
-import { ButtonLink, buttonClasses } from "@/components/ui/Button";
+import { buttonClasses } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
+import { cn } from "@/lib/cn";
 
 /** Sample scores on the home page. Clearly labelled as an example. */
 const EXAMPLE_ROWS: LeaderboardRow[] = [
@@ -11,8 +13,28 @@ const EXAMPLE_ROWS: LeaderboardRow[] = [
   { id: "zoya", name: "Zoya", answers: [1, 0, 0, 1, 0, 1, 0, 0, 1, 0].map(Boolean) },
 ];
 
+/** The two ways to play, side by side at the top of the page. */
+const MODES = [
+  {
+    href: "/create",
+    tag: "Quiz",
+    title: "Make my quiz",
+    text: "Answer 10 questions about you: hot takes, money, travel, music. Friends guess each one.",
+    cta: "Start a quiz",
+    isNew: false,
+  },
+  {
+    href: "/road",
+    tag: "New · Free for now",
+    title: "Walk a story",
+    text: "Make 5 choices in a short story. Friends guess every turn you took and see where you split.",
+    cta: "Pick a story",
+    isNew: true,
+  },
+];
+
 const STEPS = [
-  "Pick topics you're into and answer 10 questions about you.",
+  "Answer 10 questions about you, or walk a short story.",
   "Share your link or 6-letter code.",
   "Friends guess. The leaderboard updates live.",
 ];
@@ -22,21 +44,43 @@ export default function Home() {
     <PageShell>
       <Sheet ruled>
         <span className="text-xs font-bold tracking-widest text-ink-soft uppercase">
-          The friendship quiz
+          The friendship game
         </span>
         <h1 className="font-hand text-[clamp(2rem,7vw,2.6rem)] leading-tight font-bold">
-          Ten questions about you. Find out which friend <span className="highlight">actually</span>{" "}
-          knows you.
+          Find out which friend <span className="highlight">actually</span> knows you.
         </h1>
         <p className="max-w-[42ch] text-lg text-ink-soft">
-          Hot takes, money habits, travel style, music. Pick the topics, send the link, and watch
-          your friends get ranked.
+          Pick how you want to play, send the link, and watch your friends get ranked.
         </p>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <ButtonLink href="/create" variant="pink">
-            Make my quiz
-          </ButtonLink>
-        </div>
+        <ul aria-label="Ways to play" className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
+          {MODES.map((mode) => (
+            <li key={mode.href} className="flex">
+              <Link
+                href={mode.href}
+                className={cn(
+                  "flex w-full flex-col gap-1.5 rounded-xl border-2 bg-sheet p-4 text-ink no-underline transition-colors hover:border-ink",
+                  mode.isNew ? "border-pink" : "border-line",
+                )}
+              >
+                <span
+                  className={cn(
+                    "self-start rounded-full px-2 py-0.5 text-xs font-bold",
+                    mode.isNew ? "bg-hi text-on-hi" : "bg-line text-ink",
+                  )}
+                >
+                  {mode.tag}
+                </span>
+                <span className="text-xl font-bold">{mode.title}</span>
+                <span className="text-sm text-ink-soft">{mode.text}</span>
+                <span
+                  className={cn("mt-auto pt-2 font-bold", mode.isNew ? "text-pink" : "text-ink")}
+                >
+                  {mode.cta} <span aria-hidden="true">→</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
         <form action="/play" className="flex flex-col gap-1.5">
           <label
             htmlFor="join-code"
@@ -76,22 +120,6 @@ export default function Home() {
           <span className="text-sm text-ink-soft">10 questions</span>
         </div>
         <Leaderboard rows={EXAMPLE_ROWS} />
-      </Sheet>
-
-      <Sheet>
-        <span className="font-mono text-xs tracking-widest text-pink uppercase">
-          New · Story mode · Free for a limited period
-        </span>
-        <h2 className="text-2xl leading-tight font-bold">Can your friends follow your road?</h2>
-        <p className="text-ink-soft">
-          Play a short story and make 5 choices. Friends walk the same story and guess every turn
-          you took. See where your roads split, and who ended up where you did.
-        </p>
-        <div>
-          <ButtonLink href="/road" variant="ink">
-            Walk a story
-          </ButtonLink>
-        </div>
       </Sheet>
 
       <ol className="grid gap-3 sm:grid-cols-3">

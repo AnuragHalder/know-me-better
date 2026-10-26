@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("signed-out visitors who tap Make my quiz are asked to sign in", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("link", { name: "Make my quiz" }).click();
+  await page.getByRole("link", { name: /Make my quiz/ }).click();
   await expect(page).toHaveURL(/\/login\?next=(%2F|\/)create/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Sign in to make your quiz");
 });
