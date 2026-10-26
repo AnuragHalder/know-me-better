@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LookToggle } from "@/components/LookToggle";
+import { BrandMark } from "@/components/ui/BrandMark";
 import { BRAND_NAME } from "@/lib/brand";
 import type { Look } from "@/lib/look";
 import { getCurrentUser } from "@/lib/supabase/server";
@@ -13,8 +14,9 @@ export async function SiteHeader({ look }: { look: Look }) {
     <header className="flex items-center justify-between gap-2">
       <Link
         href="/"
-        className="min-w-0 font-hand text-lg font-bold whitespace-nowrap text-ink no-underline min-[400px]:text-2xl"
+        className="flex min-w-0 items-center gap-2 font-hand text-base font-bold whitespace-nowrap text-ink no-underline min-[400px]:text-2xl"
       >
+        <BrandMark className="size-7 min-[400px]:size-8" />
         <span className="highlight">{BRAND_NAME}</span>
       </Link>
       <div className="flex shrink-0 items-center gap-2">

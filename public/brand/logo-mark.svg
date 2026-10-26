@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Who Knows Me Better">
+  <rect width="120" height="120" rx="28" fill="#121316"/>
+  <g transform="translate(2 3)">
+  <g stroke-width="6" stroke-linecap="round">
+    <line x1="58" y1="16" x2="58" y2="8" stroke="#d4f53c"/>
+    <line x1="43.1" y1="20.7" x2="38.5" y2="14.2" stroke="#9d8bff"/>
+    <line x1="72.9" y1="20.7" x2="77.5" y2="14.2" stroke="#9d8bff"/>
+    <line x1="33.6" y1="33.1" x2="26" y2="30.4" stroke="#d4f53c"/>
+    <line x1="82.4" y1="33.1" x2="90" y2="30.4" stroke="#d4f53c"/>
+  </g>
+  <g transform="translate(10 22) scale(0.9)">
+    <path d="M32 38 C32 22 44 14 54 14 C68 14 76 24 76 35 C76 47 66 52 58 57 C54 60 53 63 53 69" fill="none" stroke="#d4f53c" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="53" cy="86" r="7.5" fill="#d4f53c"/>
+  </g>
+  </g>
+</svg>
