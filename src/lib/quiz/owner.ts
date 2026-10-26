@@ -9,6 +9,8 @@ export interface OwnerQuiz {
   play_count: number;
   created_at: string;
   look: "notebook" | "clean";
+  kind: "quiz" | "road";
+  story_id: string | null;
   questions: {
     position: number;
     question_id: string | null;
@@ -37,7 +39,7 @@ export async function loadOwnerQuiz(
   const { data, error } = await supabase
     .from("quizzes")
     .select(
-      "id, code, owner_name, play_count, created_at, look, questions:quiz_questions(position, question_id, prompt, prompt_self, options, correct_option, source, kind, map_scope, answer_lat, answer_lng, answer_label)",
+      "id, code, owner_name, play_count, created_at, look, kind, story_id, questions:quiz_questions(position, question_id, prompt, prompt_self, options, correct_option, source, kind, map_scope, answer_lat, answer_lng, answer_label)",
     )
     .eq("id", quizId)
     .maybeSingle();

@@ -4,6 +4,8 @@ import { notFound, redirect } from "next/navigation";
 import { DeleteQuizButton } from "@/components/DeleteQuizButton";
 import { LiveLeaderboard } from "@/components/LiveLeaderboard";
 import { GuessMap, type GuessMapItem } from "@/components/map/GuessMap";
+import { EndingTally, type RoadRevealData } from "@/components/road/EndingTally";
+import { RoadOwner } from "@/components/road/RoadOwner";
 import { PageShell } from "@/components/PageShell";
 import { ShareBox } from "@/components/ShareBox";
 import { Button, ButtonLink } from "@/components/ui/Button";
@@ -14,6 +16,8 @@ import type { Board } from "@/lib/quiz/board";
 import { fillName } from "@/lib/quiz/build";
 import { loadOwnerQuiz } from "@/lib/quiz/owner";
 import { playPath } from "@/lib/quiz/share";
+import { roadInviteText } from "@/lib/road/story";
+import { loadStory } from "@/lib/road/stories";
 import { getCurrentUser, getServerSupabase } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Your quiz" };
@@ -35,6 +39,67 @@ export default async function OwnerQuizPage({
   if (!quiz) notFound();
 
   const url = `${await siteOrigin()}${playPath(quiz.code)}`;
+
+  if (quiz.kind === "road" && quiz.story_id) {
+    const story = await loadStory(supabase, quiz.story_id);
+    if (!story) notFound();
+    const [{ data: reveal }, { data: boardData }] = await Promise.all([
+      supabase.rpc("get_road_reveal", { p_quiz_id: quiz.id }),
+      supabase.rpc("get_leaderboard", { p_quiz_id: quiz.id }),
+    ]);
+    const data = reveal as RoadRevealData | null;
+    return (
+      <PageShell look={quiz.look}>
+        <Sheet ruled>
+          <span className="text-xs font-bold tracking-widest text-ink-soft uppercase">
+            {isNew ? "Your road is ready" : story.title}
+          </span>
+          <h1 className="font-hand text-4xl leading-tight font-bold">
+            Can your friends <span className="highlight">follow you</span>?
+          </h1>
+          <p className="text-ink-soft">
+            Send this to friends. They walk &ldquo;{story.title}&rdquo; and guess every turn you
+            took.
+          </p>
+          <ShareBox url={url} code={quiz.code} text={roadInviteText(story, url, quiz.code)} />
+        </Sheet>
+
+        {data && (
+          <Sheet>
+            <RoadOwner story={story} data={data} />
+          </Sheet>
+        )}
+        {data && data.total > 0 && (
+          <Sheet>
+            <EndingTally story={story} data={data} ownerName={quiz.owner_name} viewer="owner" />
+          </Sheet>
+        )}
+
+        <Sheet>
+          <LiveLeaderboard
+            quizId={quiz.id}
+            initial={(boardData as Board | null) ?? null}
+            title="Who can follow your road"
+            ownerName={quiz.owner_name}
+            viewer="owner"
+            emptyText="No one has walked your road yet. Friends show up here as they finish."
+          />
+        </Sheet>
+
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex flex-wrap gap-2">
+            <ButtonLink href="/me" variant="ghost" size="sm">
+              All my pages
+            </ButtonLink>
+            <ButtonLink href="/road" variant="ghost" size="sm">
+              Walk another story
+            </ButtonLink>
+          </div>
+          <DeleteQuizButton quizId={quiz.id} plays={quiz.play_count} />
+        </div>
+      </PageShell>
+    );
+  }
 
   const hasMaps = quiz.questions.some((q) => q.kind === "pin");
   const [{ data: boardData }, { data: statsData }, { data: lockData }, { data: mapData }] =

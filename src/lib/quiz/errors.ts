@@ -29,6 +29,9 @@ const MESSAGES: Record<string, string> = {
   attempt_finished: "This round is already finished.",
   invalid_choice: "Pick one of the options.",
   not_allowed: "Finish the quiz to see the leaderboard.",
+  story_not_found: "That story isn't available any more. Pick another one.",
+  not_finished: "Finish walking the road to see where it went.",
+  road_not_editable: "A road can't be edited. Walk the story again to make a new one.",
 };
 
 export function quizErrorMessage(message: string | null | undefined): string {

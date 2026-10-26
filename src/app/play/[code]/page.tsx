@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { PageShell } from "@/components/PageShell";
 import { PlayClient, type PlayQuiz, type PlayStart } from "@/components/play/PlayClient";
+import { RoadPlay, type RoadStart } from "@/components/road/RoadPlay";
 import { ButtonLink } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { BRAND_NAME } from "@/lib/brand";
 import { siteOrigin } from "@/lib/origin";
 import { playPath } from "@/lib/quiz/share";
+import { loadStory } from "@/lib/road/stories";
 import { getCurrentUser, getServerSupabase } from "@/lib/supabase/server";
 
 type Params = { params: Promise<{ code: string }> };
@@ -14,7 +16,7 @@ type Params = { params: Promise<{ code: string }> };
 const CODE = /^[A-HJ-NP-Z2-9]{6}$/;
 
 /** The quiz as friends may see it: wording and options, never the answers. */
-const loadQuiz = cache(async (raw: string): Promise<PlayQuiz | null> => {
+const loadQuiz = cache(async (raw: string): Promise<(PlayQuiz & { storyId?: string }) | null> => {
   const code = raw.toUpperCase();
   if (!CODE.test(code)) return null;
   const supabase = await getServerSupabase();
@@ -26,6 +28,8 @@ const loadQuiz = cache(async (raw: string): Promise<PlayQuiz | null> => {
     owner_name: string;
     look?: string;
     retries_locked?: boolean;
+    kind?: string;
+    story_id?: string | null;
     questions: PlayQuiz["questions"] | null;
   } | null;
   if (!q?.questions?.length) return null;
@@ -36,6 +40,7 @@ const loadQuiz = cache(async (raw: string): Promise<PlayQuiz | null> => {
     retriesLocked: Boolean(q.retries_locked),
     look: q.look === "clean" ? "clean" : "notebook",
     questions: q.questions,
+    storyId: q.kind === "road" && q.story_id ? q.story_id : undefined,
   };
 });
 
@@ -43,6 +48,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { code } = await params;
   const quiz = await loadQuiz(code);
   if (!quiz) return { title: "Play" };
+  if (quiz.storyId) {
+    const title = `Can you guess ${quiz.ownerName}'s every turn?`;
+    const description = `${quiz.ownerName} walked a story and made ${quiz.questions.length} choices. Guess each one on ${BRAND_NAME} and see where your roads split.`;
+    return { title, description, openGraph: { title, description } };
+  }
   const title = `How well do you know ${quiz.ownerName}?`;
   const description = `Take ${quiz.ownerName}'s ${quiz.questions.length}-question quiz on ${BRAND_NAME} and see where you land on the leaderboard.`;
   return { title, description, openGraph: { title, description } };
@@ -106,7 +116,7 @@ export default async function PlayPage({ params }: Params) {
               Code {quiz.code}
             </span>
             <h1 className="font-hand text-4xl leading-tight font-bold">
-              This is <span className="highlight">your</span> quiz
+              This is <span className="highlight">your</span> {quiz.storyId ? "road" : "quiz"}
             </h1>
             <p className="text-ink-soft">
               You can&apos;t play your own page. Send the link to friends and watch their scores.
@@ -155,6 +165,33 @@ export default async function PlayPage({ params }: Params) {
   }
 
   const url = `${await siteOrigin()}${playPath(quiz.code)}`;
+
+  if (quiz.storyId) {
+    const story = await loadStory(supabase, quiz.storyId);
+    if (story) {
+      const roadStart: RoadStart =
+        start.kind === "finished"
+          ? { kind: "finished", playerName: start.playerName, results: start.results }
+          : start.kind === "resume"
+            ? {
+                kind: "resume",
+                attemptId: start.attemptId,
+                playerName: start.playerName,
+                results: start.results,
+              }
+            : start;
+      return (
+        <PageShell look={quiz.look}>
+          <RoadPlay
+            key={roadStart.kind}
+            road={{ id: quiz.id, code: quiz.code, ownerName: quiz.ownerName, story }}
+            start={roadStart}
+            url={url}
+          />
+        </PageShell>
+      );
+    }
+  }
 
   return (
     <PageShell look={quiz.look}>

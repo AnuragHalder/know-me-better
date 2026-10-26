@@ -107,11 +107,13 @@ export function LiveLeaderboard({
   }
 
   const hidden = hiddenCount(board);
+  const rows = boardRows(board);
+  const outOf = rows[0]?.answers.length || 10;
 
   return (
     <div className="flex flex-col gap-2">
       {header}
-      <Leaderboard rows={boardRows(board)} emptyText={emptyText} fresh={fresh} />
+      <Leaderboard rows={rows} emptyText={emptyText} fresh={fresh} />
       {hidden > 0 && (
         <div className="relative">
           <ol aria-hidden="true" className="flex flex-col blur-[5px] select-none">
@@ -122,7 +124,7 @@ export function LiveLeaderboard({
               >
                 <span className="font-mono font-bold text-ink-soft">{11 + i}</span>
                 <span className="h-3 w-24 rounded bg-ink-soft/40" />
-                <span className="font-mono font-bold">?/10</span>
+                <span className="font-mono font-bold">?/{outOf}</span>
               </li>
             ))}
           </ol>

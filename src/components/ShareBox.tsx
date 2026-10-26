@@ -6,8 +6,16 @@ import { BRAND_NAME } from "@/lib/brand";
 import { inviteText, whatsappHref } from "@/lib/quiz/share";
 
 /** Code, link and the three ways to send them: phone share sheet, WhatsApp, copy. */
-export function ShareBox({ url, code }: { url: string; code: string }) {
-  const text = inviteText(url, code);
+export function ShareBox({
+  url,
+  code,
+  text = inviteText(url, code),
+}: {
+  url: string;
+  code: string;
+  /** The invite to send. Defaults to the quiz invite. */
+  text?: string;
+}) {
   const [canShare, setCanShare] = useState(false);
   const [note, setNote] = useState("");
 

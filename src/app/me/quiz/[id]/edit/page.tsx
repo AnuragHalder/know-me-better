@@ -21,7 +21,8 @@ export default async function EditQuizPage({ params }: { params: Promise<{ id: s
   const quiz = await loadOwnerQuiz(supabase, id);
   if (!quiz) notFound();
   // Answers lock once friends have played; the quiz page explains why.
-  if (quiz.play_count > 0) redirect(`/me/quiz/${id}`);
+  // Roads keep their story; friends' guesses are scored against it.
+  if (quiz.play_count > 0 || quiz.kind === "road") redirect(`/me/quiz/${id}`);
 
   const [bank, aiStatus] = await Promise.all([loadBank(supabase), getAiStatus()]);
   const initialItems = draftFromSaved(quiz.questions, new Map(bank.map((q) => [q.id, q])));

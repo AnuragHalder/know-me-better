@@ -52,7 +52,7 @@ export function Leaderboard({
             {r.isMe && <small className="ml-1.5 font-medium text-ink-soft">you</small>}
           </span>
           <span className="font-mono font-bold tabular-nums">
-            {r.score}/{QUESTIONS_PER_QUIZ}
+            {r.score}/{r.answers.length || QUESTIONS_PER_QUIZ}
           </span>
           <ScoreGrid answers={r.answers} size="sm" className="col-start-2 col-end-4" />
         </li>
