@@ -15,6 +15,9 @@ interface QuizRow {
   id: string;
   code: string;
   owner_name: string;
+  kind?: "quiz" | "road";
+  story_title?: string | null;
+  total?: number;
   play_count: number;
   created_at: string;
   last_played_at: string | null;
@@ -58,9 +61,12 @@ export default async function MePage({
               Pick a few topics and answer 10 questions about you. Then send the link and see which
               friend knows you best.
             </p>
-            <div>
+            <div className="flex flex-wrap gap-2">
               <ButtonLink href="/create" variant="pink">
                 Make my quiz
+              </ButtonLink>
+              <ButtonLink href="/road" variant="ghost">
+                Or walk a story
               </ButtonLink>
             </div>
           </>
@@ -78,13 +84,24 @@ export default async function MePage({
                   href={`/me/quiz/${q.id}`}
                   className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 py-2.5 text-ink no-underline"
                 >
-                  <span className="truncate font-semibold">{q.owner_name}&apos;s page</span>
+                  <span className="truncate font-semibold">
+                    {q.kind === "road" ? (
+                      <>
+                        <span className="mr-1.5 rounded-full bg-hi px-1.5 py-0.5 align-middle text-[0.68rem] font-bold tracking-wider text-on-hi uppercase">
+                          Road
+                        </span>
+                        {q.story_title}
+                      </>
+                    ) : (
+                      <>{q.owner_name}&apos;s page</>
+                    )}
+                  </span>
                   <span className="font-mono text-sm font-bold tracking-widest">{q.code}</span>
                   <span className="truncate text-sm text-ink-soft">
                     {q.top ? (
                       <>
                         <b className="text-ink">{q.top.player_name}</b> leads, {q.top.score}/
-                        {QUESTIONS_PER_QUIZ}
+                        {q.total || QUESTIONS_PER_QUIZ}
                       </>
                     ) : (
                       `Made ${dateFormat.format(new Date(q.created_at))}`
@@ -100,9 +117,12 @@ export default async function MePage({
               </li>
             ))}
           </ul>
-          <div>
+          <div className="flex flex-wrap gap-2">
             <ButtonLink href="/create" variant="ghost" size="sm">
               Make another quiz
+            </ButtonLink>
+            <ButtonLink href="/road" variant="ghost" size="sm">
+              Walk a story
             </ButtonLink>
           </div>
         </Sheet>

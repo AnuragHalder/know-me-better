@@ -78,6 +78,22 @@ export default function Home() {
         <Leaderboard rows={EXAMPLE_ROWS} />
       </Sheet>
 
+      <Sheet>
+        <span className="font-mono text-xs tracking-widest text-pink uppercase">
+          New · Story mode · Free for a limited period
+        </span>
+        <h2 className="text-2xl leading-tight font-bold">Can your friends follow your road?</h2>
+        <p className="text-ink-soft">
+          Play a short story and make 5 choices. Friends walk the same story and guess every turn
+          you took. See where your roads split, and who ended up where you did.
+        </p>
+        <div>
+          <ButtonLink href="/road" variant="ink">
+            Walk a story
+          </ButtonLink>
+        </div>
+      </Sheet>
+
       <ol className="grid gap-3 sm:grid-cols-3">
         {STEPS.map((text, i) => (
           <li key={text} className="flex items-baseline gap-3 sm:flex-col sm:gap-1">

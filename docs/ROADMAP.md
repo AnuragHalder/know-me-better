@@ -31,3 +31,13 @@ answers with a place, friends drop a pin and score by distance. Map data is buil
 `scripts/build-map-data.mjs` into `public/maps/` (Natural Earth with India's official
 boundaries; GeoNames place names, CC BY 4.0, credited on the About page). Later: multi-stop
 "journey", "long-distance bestie", a daily map game.
+
+## Raj's Road (story mode)
+
+The creator plays a short story (`/road`) and makes one choice at each of 5 turns. Friends walk
+the same story guessing each turn; after each guess they learn only "together" or "split". At
+the end they see both paths on a route map, both endings, and how many friends ended where the
+creator did. A road is a quiz of kind `road`, so scoring, the leaderboard and the dashboard are
+shared. Stories live in the `stories` table; every option votes for an ending (most votes wins,
+ties go to the latest vote). All stories are free for a limited period. Later: story packs
+(Shaadi Season, Office Life), AI-written stories about a friend group (Pro).
