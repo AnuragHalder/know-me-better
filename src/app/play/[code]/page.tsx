@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { cache } from "react";
 import { PageShell } from "@/components/PageShell";
 import { PlayClient, type PlayQuiz, type PlayStart } from "@/components/play/PlayClient";
@@ -7,6 +8,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { BRAND_NAME } from "@/lib/brand";
 import { siteOrigin } from "@/lib/origin";
+import { roomPath } from "@/lib/party/room";
 import { playPath } from "@/lib/quiz/share";
 import { loadStory } from "@/lib/road/stories";
 import { getCurrentUser, getServerSupabase } from "@/lib/supabase/server";
@@ -64,6 +66,12 @@ export default async function PlayPage({ params }: Params) {
   const quiz = await loadQuiz(code);
 
   if (!quiz) {
+    // The same codes open party rooms, so the home page's code box works for both.
+    const supabase = CODE.test(code) ? await getServerSupabase() : null;
+    const { data: room } = supabase
+      ? await supabase.rpc("room_preview", { p_code: code })
+      : { data: null };
+    if (room) redirect(roomPath(code));
     return (
       <PageShell>
         <Sheet ruled>

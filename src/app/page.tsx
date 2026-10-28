@@ -31,6 +31,14 @@ const MODES = [
     cta: "Pick a story",
     isNew: true,
   },
+  {
+    href: "/party",
+    tag: "New · Play live",
+    title: "Party room",
+    text: "Share a code and play together on your phones: Fake It and Same Brain.",
+    cta: "Open a room",
+    isNew: true,
+  },
 ];
 
 const STEPS = [
@@ -52,7 +60,7 @@ export default function Home() {
         <p className="max-w-[42ch] text-lg text-ink-soft">
           Pick how you want to play, send the link, and watch your friends get ranked.
         </p>
-        <ul aria-label="Ways to play" className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
+        <ul aria-label="Ways to play" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {MODES.map((mode) => (
             <li key={mode.href} className="flex">
               <Link
