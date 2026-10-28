@@ -41,3 +41,12 @@ creator did. A road is a quiz of kind `road`, so scoring, the leaderboard and th
 shared. Stories live in the `stories` table; every option votes for an ending (most votes wins,
 ties go to the latest vote). All stories are free for a limited period. Later: story packs
 (Shaadi Season, Office Life), AI-written stories about a friend group (Pro).
+
+## Party rooms (live games)
+
+A signed-in host opens a room (`/party`), shares the 6-character code, and up to 5 friends join
+with just a name. Everyone plays on their own phone; each phone polls `room_state` every 1.5 s and
+the database moves the game on, so there's no server process to run. Games: **Fake It** (write a
+fake answer about a friend, vote for the truth) and **Same Brain** (everyone types one word,
+matching answers score). 60 Fake It and 100+ Same Brain prompts ship free. Next: AI custom packs
+(OpenAI, Pro or ₹19), paid prompt packs, and the ₹49 Party pass for rooms of up to 12.

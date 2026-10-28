@@ -32,6 +32,18 @@ const MESSAGES: Record<string, string> = {
   story_not_found: "That story isn't available any more. Pick another one.",
   not_finished: "Finish walking the road to see where it went.",
   road_not_editable: "A road can't be edited. Walk the story again to make a new one.",
+  room_not_found: "There's no room with that code. Check it with your friend.",
+  not_in_room: "You're not in this room yet. Join with your name first.",
+  room_started: "This game has already started. Ask the host to start a new one.",
+  room_full: "This room is full. Free rooms hold 5 players.",
+  name_taken: "Someone in the room already has that name. Add an initial.",
+  need_players: "Wait for more friends to join before starting.",
+  host_only: "Only the host can do that.",
+  invalid_game: "Pick one of the games.",
+  invalid_answer: "Type an answer (up to 40 characters).",
+  too_late: "Time's up for that one. Wait for the next round.",
+  cannot_vote: "You don't vote this round. Sit tight.",
+  own_answer: "That's your own answer. Pick another one.",
 };
 
 export function quizErrorMessage(message: string | null | undefined): string {
