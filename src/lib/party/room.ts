@@ -1,6 +1,6 @@
 import { BRAND_NAME } from "@/lib/brand";
 
-export type PartyGame = "fake_it" | "same_brain";
+export type PartyGame = "fake_it" | "same_brain" | "killer";
 
 export const GAMES: Record<PartyGame, { title: string; blurb: string; min: number }> = {
   fake_it: {
@@ -13,10 +13,86 @@ export const GAMES: Record<PartyGame, { title: string; blurb: string; min: numbe
     blurb: "Everyone types one word. Score when your minds match.",
     min: 2,
   },
+  killer: {
+    title: "Killer",
+    blurb:
+      "Secret roles: a killer, a police, the rest villagers. Catch the killer before it's too late.",
+    min: 4,
+  },
 };
+
+export type KillerRole = "killer" | "police" | "villager";
+
+/** Killer-only part of the room view. Roles of others appear only in `result`. */
+export interface KillerState {
+  role: KillerRole | null;
+  alive: boolean;
+  kills: number;
+  kills_needed: number;
+  /** Killer only: seconds until the next kill is allowed. */
+  kill_ready_in: number | null;
+  deaths: { name: string; after_seconds: number }[];
+  my_suspect: string | null;
+  /** Police only: how many living villagers suspect each player. */
+  suspects: { name: string; count: number }[] | null;
+  result: {
+    winner: "killer" | "village";
+    reason: "kills" | "caught_police" | "accused_right" | "accused_wrong" | "time";
+    accused: string | null;
+    roles: {
+      name: string;
+      role: KillerRole;
+      alive: boolean;
+      suspect: string | null;
+      points: number;
+      is_me: boolean;
+    }[];
+  } | null;
+}
+
+export const ROLE_INFO: Record<KillerRole, { title: string; goal: string }> = {
+  killer: {
+    title: "You're the killer",
+    goal: "Pick off villagers one by one, but never pick the police: they'll catch you.",
+  },
+  police: {
+    title: "You're the police",
+    goal: "You get one accusation. Name the killer and the village wins. Get it wrong and the killer wins.",
+  },
+  villager: {
+    title: "You're a villager",
+    goal: "Stay alive and mark who you suspect. Only the police sees the count.",
+  },
+};
+
+/** One line on how a Killer round ended. */
+export function killerOutcome(result: NonNullable<KillerState["result"]>): string {
+  const killer = result.roles.find((r) => r.role === "killer")?.name ?? "The killer";
+  const police = result.roles.find((r) => r.role === "police")?.name ?? "the police";
+  switch (result.reason) {
+    case "kills":
+      return `${killer} got away with it.`;
+    case "caught_police":
+      return `${killer} went for ${police}, who was the police. Caught!`;
+    case "accused_right":
+      return `${police} named ${killer}. Caught!`;
+    case "accused_wrong":
+      return `${police} accused ${result.accused}, but the killer was ${killer}.`;
+    case "time":
+      return `Time ran out. ${killer} didn't get enough kills.`;
+  }
+}
+
+/** 185 → "3:05". */
+export function formatClock(secs: number): string {
+  const s = Math.max(0, Math.floor(secs));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
 
 export interface RoomPlayer {
   name: string;
+  /** Killer: still in this round. */
+  alive?: boolean;
   score: number;
   is_host: boolean;
   is_me: boolean;
@@ -50,7 +126,7 @@ export interface RoomView {
   game_no: number;
   round: number;
   total_rounds: number;
-  phase: "write" | "vote" | "answer" | "reveal" | null;
+  phase: "write" | "vote" | "answer" | "night" | "reveal" | null;
   seconds_left: number | null;
   max_players: number;
   min_players: number;
@@ -65,6 +141,7 @@ export interface RoomView {
   options: { index: number; text: string; mine: boolean }[] | null;
   reveal: (FakeItReveal & SameBrainReveal) | null;
   awards: Award[] | null;
+  killer?: KillerState | null;
 }
 
 /** What room_preview returns to anyone with the code. */

@@ -130,6 +130,9 @@ export function PartyRoom({
           onAnswer={(text) => act("submit_room_answer", { p_text: text })}
           onVote={(index) => act("submit_room_vote", { p_index: index })}
           onNext={() => act("next_room_round", {})}
+          onKill={(name) => act("killer_kill", { p_target: name })}
+          onAccuse={(name) => act("killer_accuse", { p_target: name })}
+          onSuspect={(name) => act("killer_suspect", { p_target: name })}
         />
       </>
     );
@@ -249,7 +252,7 @@ function JoinCard({
         <p className="font-semibold text-bad">
           {closed
             ? "This game has already started. Ask the host to start a new one."
-            : "This room is full. Free rooms hold 5 players."}
+            : "This room is full. Free rooms hold 8 players."}
         </p>
       ) : (
         <form onSubmit={join} className="flex flex-col gap-3" noValidate>

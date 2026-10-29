@@ -46,7 +46,7 @@ export function PartyHost({ initialName }: { initialName: string }) {
       </span>
       <h1 className="font-hand text-4xl leading-tight font-bold">Play live with your group</h1>
       <p className="text-lg text-ink-soft">
-        Open a room, share the code, and everyone plays on their own phone at the same time. Up to 5
+        Open a room, share the code, and everyone plays on their own phone at the same time. Up to 8
         players, no sign-up for friends.
       </p>
       <form onSubmit={open} className="flex flex-col gap-4" noValidate>

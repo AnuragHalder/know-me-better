@@ -35,7 +35,7 @@ const MODES = [
     href: "/party",
     tag: "New · Play live",
     title: "Party room",
-    text: "Share a code and play together on your phones: Fake It and Same Brain.",
+    text: "Share a code and play together on your phones: Killer, Fake It and Same Brain.",
     cta: "Open a room",
     isNew: true,
   },
