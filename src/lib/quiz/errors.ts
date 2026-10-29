@@ -35,7 +35,7 @@ const MESSAGES: Record<string, string> = {
   room_not_found: "There's no room with that code. Check it with your friend.",
   not_in_room: "You're not in this room yet. Join with your name first.",
   room_started: "This game has already started. Ask the host to start a new one.",
-  room_full: "This room is full. Free rooms hold 5 players.",
+  room_full: "This room is full. Free rooms hold 8 players.",
   name_taken: "Someone in the room already has that name. Add an initial.",
   need_players: "Wait for more friends to join before starting.",
   host_only: "Only the host can do that.",
@@ -44,6 +44,9 @@ const MESSAGES: Record<string, string> = {
   too_late: "Time's up for that one. Wait for the next round.",
   cannot_vote: "You don't vote this round. Sit tight.",
   own_answer: "That's your own answer. Pick another one.",
+  too_soon: "Too soon. Wait a few seconds before the next kill.",
+  invalid_target: "Pick someone who's still in the game.",
+  not_your_move: "That's not your move in this round.",
 };
 
 export function quizErrorMessage(message: string | null | undefined): string {

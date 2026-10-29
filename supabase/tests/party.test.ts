@@ -112,8 +112,16 @@ describe("party rooms", () => {
     );
   });
 
-  it("refuses duplicate names, a sixth player, and outsiders", async () => {
-    const { code } = await room("same_brain", ["Meera", "Kabir", "Zoya", "Aarav"]);
+  it("refuses duplicate names, a ninth player, and outsiders", async () => {
+    const { code } = await room("same_brain", [
+      "Meera",
+      "Kabir",
+      "Zoya",
+      "Aarav",
+      "Riya",
+      "Dev",
+      "Tara",
+    ]);
     const late = await createUser(db, { anonymous: true });
     await expect(rpc(db, late, "join_room", [code, "meera"])).rejects.toThrow("name_taken");
     await expect(rpc(db, late, "join_room", [code, "Ishaan"])).rejects.toThrow("room_full");

@@ -4,7 +4,15 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { cn } from "@/lib/cn";
-import { ANSWER_MAX, GAMES, formatPoints, type RoomPlayer, type RoomView } from "@/lib/party/room";
+import { KillerRound } from "@/components/party/KillerRound";
+import {
+  ANSWER_MAX,
+  GAMES,
+  formatClock,
+  formatPoints,
+  type RoomPlayer,
+  type RoomView,
+} from "@/lib/party/room";
 
 interface RoundProps {
   view: RoomView;
@@ -13,10 +21,27 @@ interface RoundProps {
   onAnswer: (text: string) => void;
   onVote: (index: number) => void;
   onNext: () => void;
+  onKill?: (name: string) => void;
+  onAccuse?: (name: string) => void;
+  onSuspect?: (name: string | null) => void;
 }
 
 /** One round of Fake It or Same Brain, whichever phase it's in. */
-export function PartyRound({ view, secondsLeft, busy, onAnswer, onVote, onNext }: RoundProps) {
+export function PartyRound(props: RoundProps) {
+  const { view, secondsLeft, busy, onAnswer, onVote, onNext } = props;
+  if (view.game === "killer") {
+    return (
+      <KillerRound
+        view={view}
+        secondsLeft={secondsLeft}
+        busy={busy}
+        onKill={props.onKill ?? (() => {})}
+        onAccuse={props.onAccuse ?? (() => {})}
+        onSuspect={props.onSuspect ?? (() => {})}
+        onNext={onNext}
+      />
+    );
+  }
   const writing = view.phase === "write" || view.phase === "answer";
   return (
     <>
@@ -33,7 +58,7 @@ export function PartyRound({ view, secondsLeft, busy, onAnswer, onVote, onNext }
               )}
               aria-label={`${secondsLeft} seconds left`}
             >
-              0:{String(secondsLeft).padStart(2, "0")}
+              {formatClock(secondsLeft)}
             </span>
           )}
         </div>
@@ -291,7 +316,13 @@ export function Scoreboard({ players, showDone }: { players: RoomPlayer[]; showD
             className="grid grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-x-2.5 border-t border-line py-2 first:border-t-0"
           >
             <span className="font-mono font-bold text-ink-soft">{i + 1}</span>
-            <span className={cn("truncate font-semibold", p.is_me && "text-pink-ink")}>
+            <span
+              className={cn(
+                "truncate font-semibold",
+                p.is_me && "text-pink-ink",
+                p.alive === false && "text-ink-soft line-through",
+              )}
+            >
               {p.name}
               {p.is_me && <small className="ml-1.5 font-medium text-ink-soft">you</small>}
               {showDone && (

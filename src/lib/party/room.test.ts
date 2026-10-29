@@ -30,3 +30,39 @@ describe("party room text", () => {
     expect(ROOM_CODE.test("K7M2Q0")).toBe(false);
   });
 });
+
+describe("Killer text", () => {
+  it("formats the round clock", async () => {
+    const { formatClock } = await import("./room");
+    expect(formatClock(185)).toBe("3:05");
+    expect(formatClock(9)).toBe("0:09");
+  });
+
+  it("explains how a round ended", async () => {
+    const { killerOutcome } = await import("./room");
+    const roles = [
+      {
+        name: "Kabir",
+        role: "killer" as const,
+        alive: true,
+        suspect: null,
+        points: 0,
+        is_me: false,
+      },
+      {
+        name: "Zoya",
+        role: "police" as const,
+        alive: true,
+        suspect: null,
+        points: 0,
+        is_me: false,
+      },
+    ];
+    expect(
+      killerOutcome({ winner: "village", reason: "caught_police", accused: null, roles }),
+    ).toBe("Kabir went for Zoya, who was the police. Caught!");
+    expect(
+      killerOutcome({ winner: "killer", reason: "accused_wrong", accused: "Meera", roles }),
+    ).toBe("Zoya accused Meera, but the killer was Kabir.");
+  });
+});
