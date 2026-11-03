@@ -8,7 +8,8 @@ import { EndingTally, type RoadRevealData } from "@/components/road/EndingTally"
 import { RoadOwner } from "@/components/road/RoadOwner";
 import { PageShell } from "@/components/PageShell";
 import { ShareBox } from "@/components/ShareBox";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import { BuyButton } from "@/components/pay/BuyButton";
+import { ButtonLink, buttonClasses } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { siteOrigin } from "@/lib/origin";
 import { formatRupees, PRODUCTS } from "@/lib/pricing";
@@ -66,7 +67,7 @@ export default async function OwnerQuizPage({
 
         {data && (
           <Sheet>
-            <RoadOwner story={story} data={data} />
+            <RoadOwner story={story} data={data} quizId={quiz.id} />
           </Sheet>
         )}
         {data && data.total > 0 && (
@@ -156,10 +157,10 @@ export default async function OwnerQuizPage({
       </Sheet>
 
       {guessMaps.map((item) => (
-        <GuessMap key={item.position} item={item} ownerName={quiz.owner_name} />
+        <GuessMap key={item.position} item={item} ownerName={quiz.owner_name} quizId={quiz.id} />
       ))}
 
-      <RetriesCard locked={retriesLocked} />
+      <RetriesCard locked={retriesLocked} quizId={quiz.id} />
 
       <Sheet>
         <div className="flex items-baseline justify-between gap-3">
@@ -238,7 +239,7 @@ const SECOND_CHANCE = PRODUCTS.find((p) => p.id === "second_chance");
 const LOCK_RETRIES = PRODUCTS.find((p) => p.id === "lock_retries");
 
 /** Second chances are on by default; the creator can pay once to turn them off. */
-function RetriesCard({ locked }: { locked: boolean }) {
+function RetriesCard({ locked, quizId }: { locked: boolean; quizId: string }) {
   return (
     <Sheet>
       <div className="flex items-baseline justify-between gap-3">
@@ -254,11 +255,13 @@ function RetriesCard({ locked }: { locked: boolean }) {
             {SECOND_CHANCE ? formatRupees(SECOND_CHANCE.amountPaise) : ""} to replay your quiz;
             their best score counts. Want one go only?
           </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="ghost" size="sm" disabled>
-              Lock retries for {LOCK_RETRIES ? formatRupees(LOCK_RETRIES.amountPaise) : ""}
-            </Button>
-            <span className="text-xs text-ink-soft">Payments open soon</span>
+          <div>
+            <BuyButton
+              product="lock_retries"
+              quizId={quizId}
+              label={`Lock retries for ${LOCK_RETRIES ? formatRupees(LOCK_RETRIES.amountPaise) : ""}`}
+              className={buttonClasses({ variant: "ghost", size: "sm" })}
+            />
           </div>
         </>
       )}

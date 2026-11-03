@@ -203,7 +203,13 @@ export default async function PlayPage({ params }: Params) {
 
   return (
     <PageShell look={quiz.look}>
-      <PlayClient key={start.kind} quiz={quiz} start={start} url={url} />
+      <PlayClient
+        // A new key when a paid second chance arrives, so the result screen offers it.
+        key={start.kind === "finished" ? `finished-${start.retry}` : start.kind}
+        quiz={quiz}
+        start={start}
+        url={url}
+      />
     </PageShell>
   );
 }

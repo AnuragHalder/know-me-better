@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { LiveLeaderboard } from "@/components/LiveLeaderboard";
+import { BuyButton } from "@/components/pay/BuyButton";
 import { MapReveal } from "@/components/map/MapReveal";
 import { PinPlay } from "@/components/map/PinPlay";
 import { Button, ButtonLink } from "@/components/ui/Button";
@@ -479,6 +480,7 @@ function PlayResult({
 
       {!revealed && (retry === "offer" || retry === "ready") && (
         <SecondChance
+          quizId={quiz.id}
           ownerName={quiz.ownerName}
           ready={retry === "ready"}
           onPlayAgain={onPlayAgain}
@@ -525,12 +527,14 @@ const SECOND_CHANCE = PRODUCTS.find((p) => p.id === "second_chance");
 
 /** "Try again": replay all questions; the best round counts on the leaderboard. */
 function SecondChance({
+  quizId,
   ownerName,
   ready,
   onPlayAgain,
   busy,
   error,
 }: {
+  quizId: string;
   ownerName: string;
   ready: boolean;
   onPlayAgain: () => void;
@@ -556,15 +560,14 @@ function SecondChance({
           </button>
         </div>
       ) : (
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            disabled
+        <div>
+          <BuyButton
+            product="second_chance"
+            quizId={quizId}
+            label={`Try again for ${price}`}
             className="min-h-11 rounded-full border-2 border-on-note bg-on-note px-4 text-sm font-bold text-note disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Try again for {price}
-          </button>
-          <span className="text-xs font-semibold text-on-note-soft">Payments open soon</span>
+            noteClassName="text-on-note-soft"
+          />
         </div>
       )}
       <p aria-live="polite" className="text-sm font-semibold empty:hidden">

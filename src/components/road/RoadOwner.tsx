@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import type { RoadRevealData } from "@/components/road/EndingTally";
+import { BuyButton } from "@/components/pay/BuyButton";
 import { RouteMap } from "@/components/road/RouteMap";
+import { buttonClasses } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { formatRupees, PRODUCTS } from "@/lib/pricing";
 import { compareRoads, findEnding, type Story } from "@/lib/road/story";
@@ -13,7 +15,15 @@ const FULL_BOARD = PRODUCTS.find((p) => p.id === "full_board");
  * The creator's road, with any friend's guesses laid over it: tap a friend to see
  * exactly where they split from you.
  */
-export function RoadOwner({ story, data }: { story: Story; data: RoadRevealData }) {
+export function RoadOwner({
+  story,
+  data,
+  quizId,
+}: {
+  story: Story;
+  data: RoadRevealData;
+  quizId: string;
+}) {
   const friends = data.friends ?? [];
   const [selected, setSelected] = useState<number | null>(friends.length > 0 ? 0 : null);
   const friend = selected !== null ? friends[selected] : null;
@@ -72,11 +82,18 @@ export function RoadOwner({ story, data }: { story: Story; data: RoadRevealData 
         </p>
       )}
       {data.hidden > 0 && (
-        <p className="rounded-xl border-2 border-dashed border-line p-3 text-sm text-ink-soft">
-          +{data.hidden} more {data.hidden === 1 ? "friend" : "friends"} walked your road. See every
-          path with the full board
-          {FULL_BOARD ? ` (${formatRupees(FULL_BOARD.amountPaise)})` : ""}. Payments open soon.
-        </p>
+        <div className="flex flex-col gap-2 rounded-xl border-2 border-dashed border-line p-3">
+          <p className="text-sm text-ink-soft">
+            +{data.hidden} more {data.hidden === 1 ? "friend" : "friends"} walked your road. See
+            every path with the full leaderboard.
+          </p>
+          <BuyButton
+            product="full_board"
+            quizId={quizId}
+            label={`See every path · ${FULL_BOARD ? formatRupees(FULL_BOARD.amountPaise) : ""}`}
+            className={buttonClasses({ variant: "ghost", size: "sm" })}
+          />
+        </div>
       )}
     </div>
   );

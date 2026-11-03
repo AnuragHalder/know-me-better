@@ -1,6 +1,8 @@
 "use client";
 
 import { MapView, type MapMark } from "@/components/map/MapView";
+import { BuyButton } from "@/components/pay/BuyButton";
+import { buttonClasses } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { fillName } from "@/lib/quiz/build";
 import { BULLSEYE_KM, formatKm, type MapScope } from "@/lib/map/geo";
@@ -20,7 +22,15 @@ export interface GuessMapItem {
 const FULL_BOARD = PRODUCTS.find((p) => p.id === "full_board");
 
 /** For the creator: where friends think their place is, closest first. */
-export function GuessMap({ item, ownerName }: { item: GuessMapItem; ownerName: string }) {
+export function GuessMap({
+  item,
+  ownerName,
+  quizId,
+}: {
+  item: GuessMapItem;
+  ownerName: string;
+  quizId: string;
+}) {
   const shown = item.guesses;
   const hidden = Math.max(0, item.total - shown.length);
   const marks: MapMark[] = [
@@ -75,10 +85,17 @@ export function GuessMap({ item, ownerName }: { item: GuessMapItem; ownerName: s
             ))}
           </ol>
           {hidden > 0 && (
-            <p className="text-sm text-ink-soft">
-              +{hidden} more {hidden === 1 ? "pin" : "pins"} with the full leaderboard (
-              {FULL_BOARD ? formatRupees(FULL_BOARD.amountPaise) : ""}, coming soon).
-            </p>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-ink-soft">
+                +{hidden} more {hidden === 1 ? "pin" : "pins"} with the full leaderboard.
+              </p>
+              <BuyButton
+                product="full_board"
+                quizId={quizId}
+                label={`See every pin · ${FULL_BOARD ? formatRupees(FULL_BOARD.amountPaise) : ""}`}
+                className={buttonClasses({ variant: "ghost", size: "sm" })}
+              />
+            </div>
           )}
         </>
       )}
