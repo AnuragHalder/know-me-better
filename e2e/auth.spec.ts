@@ -23,3 +23,9 @@ test("login ignores redirects to other websites", async ({ page }) => {
   expect(location).not.toContain("evil.example");
   expect(location).toContain("/login");
 });
+
+test("a sign-in code that lands on the home page is finished at the callback", async ({ page }) => {
+  await page.goto("/?code=8f14e45f-ceea-467a-9575-1b1c2b6d7e3a");
+  // Without a real code the callback sends people to try again, not to a signed-out home page.
+  await expect(page).toHaveURL(/\/login\?error=callback/);
+});
