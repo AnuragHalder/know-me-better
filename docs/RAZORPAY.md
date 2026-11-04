@@ -110,7 +110,16 @@ registered email.
 | `RAZORPAY_PLAN_PRO_YEARLY`  | `plan_…` (test)                                                |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API Keys → secret / service_role |
 
-## 5. How the app will take payment (app, Phase 8)
+## 5. How the app takes payment (app, Phase 8: built)
+
+On sale now: **Second chance**, **Lock retries** and **Full leaderboard** (quizzes, map pins and
+roads). Pro, Reveal and editions come next. Until all of `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`,
+`RAZORPAY_WEBHOOK_SECRET` and `SUPABASE_SERVICE_ROLE_KEY` are set, every buy button shows
+"Payments open soon" and `/api/razorpay/*` answers 503.
+
+Code: `src/app/api/razorpay/order` (creates the order), `src/app/api/razorpay/webhook` (the
+only thing that unlocks), `src/components/pay/BuyButton.tsx` (checkout), and the payment
+functions in `supabase/migrations/20261104090000_payments.sql`.
 
 1. Signed-in user taps an unlock. The server looks up the price in `src/lib/pricing.ts` (never
    trusts a price from the browser) and creates a Razorpay **Order**, saving a `purchases` row

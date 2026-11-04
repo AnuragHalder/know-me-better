@@ -9,6 +9,8 @@ import "./globals.css";
 import { DEFAULT_LOOK } from "@/lib/look";
 import { visitorLook } from "@/lib/look-server";
 import { BRAND_NAME, BRAND_TAGLINE, SITE_URL } from "@/lib/brand";
+import { PaymentsProvider } from "@/components/pay/BuyButton";
+import { paymentsEnabled } from "@/lib/razorpay/server";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -39,7 +41,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const look = (await visitorLook()) ?? DEFAULT_LOOK;
   return (
     <html lang="en" data-look={look}>
-      <body className="min-h-dvh antialiased">{children}</body>
+      <body className="min-h-dvh antialiased">
+        <PaymentsProvider enabled={paymentsEnabled()}>{children}</PaymentsProvider>
+      </body>
     </html>
   );
 }

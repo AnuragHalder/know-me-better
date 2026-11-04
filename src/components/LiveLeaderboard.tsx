@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Leaderboard } from "@/components/Leaderboard";
+import { BuyButton } from "@/components/pay/BuyButton";
+import { buttonClasses } from "@/components/ui/Button";
 import { boardRows, hiddenCount, newRowIds, type Board } from "@/lib/quiz/board";
 import { formatRupees, PRODUCTS } from "@/lib/pricing";
 import { getBrowserSupabase } from "@/lib/supabase/browser";
@@ -132,11 +134,18 @@ export function LiveLeaderboard({
             <p className="font-bold">
               +{hidden} more {hidden === 1 ? "friend" : "friends"} played
             </p>
-            <p className="text-sm text-ink-soft">
-              {viewer === "owner"
-                ? `Full leaderboard ${FULL_BOARD ? formatRupees(FULL_BOARD.amountPaise) : ""} · coming soon`
-                : `Only ${ownerName} can see the full leaderboard.`}
-            </p>
+            {viewer === "owner" ? (
+              <BuyButton
+                product="full_board"
+                quizId={quizId}
+                label={`See everyone · ${FULL_BOARD ? formatRupees(FULL_BOARD.amountPaise) : ""}`}
+                className={buttonClasses({ variant: "ink", size: "sm" })}
+              />
+            ) : (
+              <p className="text-sm text-ink-soft">
+                Only {ownerName} can see the full leaderboard.
+              </p>
+            )}
           </div>
         </div>
       )}

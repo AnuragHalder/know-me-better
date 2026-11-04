@@ -4,6 +4,7 @@ import type { Board } from "@/lib/quiz/board";
 
 const rpc = vi.fn();
 vi.mock("@/lib/supabase/browser", () => ({ getBrowserSupabase: () => ({ rpc }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 import { LiveLeaderboard } from "./LiveLeaderboard";
 
@@ -41,7 +42,7 @@ describe("LiveLeaderboard", () => {
     );
     expect(screen.getByText("13 played")).toBeInTheDocument();
     expect(screen.getByText("+3 more friends played")).toBeInTheDocument();
-    expect(screen.getByText(/Full leaderboard ₹49/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "See everyone · ₹49" })).toBeInTheDocument();
     expect(screen.queryByText("Friend 11")).not.toBeInTheDocument();
   });
 
