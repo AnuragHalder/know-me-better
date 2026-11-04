@@ -12,3 +12,4 @@
 - [ ] Tried on a phone-sized screen, light and dark
 - [ ] Database changes are in a new migration file (never edit an old one)
 - [ ] No secrets in code; new env vars added to `.env.example`
+- [ ] New feature? Listed on the About page (`src/lib/features.ts`) and, if paid, in `src/lib/pricing.ts`

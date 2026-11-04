@@ -3,7 +3,7 @@ export const BRAND_NAME = "Who Knows Me Better";
 
 /** One-line description used in link previews and search results. */
 export const BRAND_TAGLINE =
-  "Answer 10 questions about yourself, send the link, and see which friend really knows you.";
+  "Quizzes, story games and live party games that show which friend really knows you.";
 
 /**
  * The public address of the live site, used for link previews, the sitemap and

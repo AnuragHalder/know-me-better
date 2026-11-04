@@ -21,6 +21,14 @@ Read `docs/ROADMAP.md` first. Work one phase at a time, on its own branch, and o
   `set search_path = ''`, revoke it from `public, anon, authenticated`, then grant only who needs it.
   Every new rule gets a test in `supabase/tests/database.test.ts`.
 
+## New features
+
+- Every user-facing feature goes on the About page: add it (or a bullet) to `src/lib/features.ts`.
+  `features.test.ts` fails if a new top-level page or party game is missing.
+- Paid extras also go in `src/lib/pricing.ts` (Pricing page) and, if the policies mention them,
+  in the policy pages.
+- Mention the feature in `docs/ROADMAP.md`.
+
 ## Before pushing
 
 Run `npm run check && npm run build && npm run test:e2e`. All must pass.
