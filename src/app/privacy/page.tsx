@@ -63,7 +63,10 @@ export default function PrivacyPage() {
       <h2>Who handles it for us</h2>
       <ul>
         <li>Supabase: database and sign-in.</li>
-        <li>Vercel: website hosting.</li>
+        <li>
+          Vercel: website hosting, and Web Analytics (counts page visits without cookies; we see
+          only totals such as pages viewed, countries and device types).
+        </li>
         <li>Google: &quot;Continue with Google&quot; sign-in, and ads where shown.</li>
         <li>Razorpay: payments.</li>
         <li>OpenAI: writes questions from the topics you type (no email or name is sent).</li>
@@ -98,8 +101,9 @@ export default function PrivacyPage() {
 
       <h2>Cookies</h2>
       <p>
-        We use cookies needed to keep you signed in and to stop repeat plays. If we add analytics or
-        advertising cookies, we&apos;ll update this policy and ask where the law requires.
+        We use cookies needed to keep you signed in and to stop repeat plays. Our visit counting
+        (Vercel Web Analytics) doesn&apos;t use cookies. If we add analytics or advertising cookies,
+        we&apos;ll update this policy and ask where the law requires.
       </p>
 
       <h2>Security</h2>

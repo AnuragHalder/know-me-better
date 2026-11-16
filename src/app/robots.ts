@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
       // Personal pages: quizzes, accounts and sign-in callbacks stay out of search results.
-      disallow: ["/me", "/create", "/play/", "/auth/", "/login"],
+      disallow: ["/me", "/create", "/play/", "/auth/", "/login", "/admin", "/party/", "/api/"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

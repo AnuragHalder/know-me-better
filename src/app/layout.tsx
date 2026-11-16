@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 // Fonts ship with the app (no Google Fonts request at runtime or build time).
 import "@fontsource-variable/figtree/index.css";
 import "@fontsource/kalam/latin-400.css";
@@ -43,6 +44,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html lang="en" data-look={look}>
       <body className="min-h-dvh antialiased">
         <PaymentsProvider enabled={paymentsEnabled()}>{children}</PaymentsProvider>
+        {/* Vercel Web Analytics: cookieless visit counts. Only on Vercel, where the script exists. */}
+        {process.env.VERCEL === "1" && (
+          <Script src="/_vercel/insights/script.js" strategy="afterInteractive" />
+        )}
       </body>
     </html>
   );
