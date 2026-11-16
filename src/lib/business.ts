@@ -27,7 +27,7 @@ export const BUSINESS = {
   /** Minimum age to make a quiz or pay. */
   minimumAge: 18,
   /** Date the policies last changed (YYYY-MM-DD). */
-  policiesUpdated: "2026-10-19",
+  policiesUpdated: "2026-11-16",
 } as const;
 
 /** True while any business detail is still a placeholder. */

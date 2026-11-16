@@ -10,6 +10,7 @@ const APP = join(__dirname, "..", "app");
 /** Top-level pages that aren't features: policies, accounts, plumbing. */
 const NOT_FEATURES = new Set([
   "about",
+  "admin",
   "actions",
   "api",
   "auth",

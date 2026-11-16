@@ -29,3 +29,8 @@ test("a sign-in code that lands on the home page is finished at the callback", a
   // Without a real code the callback sends people to try again, not to a signed-out home page.
   await expect(page).toHaveURL(/\/login\?error=callback/);
 });
+
+test("the usage page needs sign-in", async ({ page }) => {
+  await page.goto("/admin");
+  await expect(page).toHaveURL(/\/login\?next=(%2F|\/)admin/);
+});
